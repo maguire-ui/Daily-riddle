@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { RIDDLES, START_DAY, currentDayKey, dayDiff } from "../lib/riddles";
 import SecondaryHeader from "../components/SecondaryHeader";
 
