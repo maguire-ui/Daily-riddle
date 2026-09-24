@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 
-type PuzzleType = "rope" | "coins" | "bridge";
+type PuzzleType = "rope" | "coins" | "bridge" | "switches";
 
 function saveSolved(riddleId: number) {
   const key = `daily-riddle-${riddleId}`;
@@ -53,188 +53,268 @@ const freshRope = (): RopeEndState => ({
 });
 
 function RopePuzzle({ riddleId }: { riddleId: number }) {
-  const [speed, setSpeed] = useState(1);
-  const [game, setGame] = useState<RopeGame>({
-    simTime: 0,
-    paused: false,
-    ropes: { A: freshRope(), B: freshRope() },
-  });
-  const [log, setLog] = useState<string[]>(["Simulation ready. Light any rope end to start the clock."]);
+  type RopeId = "A" | "B";
+  type RopeState = {
+    leftLit: boolean;
+    rightLit: boolean;
+    burnUnits: number;
+    done: boolean;
+  };
+
+  const fresh = (): RopeState => ({ leftLit: false, rightLit: false, burnUnits: 0, done: false });
+  const [ropes, setRopes] = useState<Record<RopeId, RopeState>>({ A: fresh(), B: fresh() });
+  const [started, setStarted] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [checkpoint, setCheckpoint] = useState(false);
+  const [correctPath, setCorrectPath] = useState(false);
+  const [slowRope, setSlowRope] = useState<RopeId | null>(null);
   const [solved, setSolved] = useState(false);
-  const lastTick = useRef(0);
-  const seenDone = useRef<Record<"A" | "B", number | null>>({ A: null, B: null });
+  const [failed, setFailed] = useState(false);
+  const [log, setLog] = useState<string[]>([
+    "Choose which rope ends to light. The clock is hidden on purpose.",
+  ]);
 
-  useEffect(() => {
-    lastTick.current = performance.now();
-    const timer = window.setInterval(() => {
-      const now = performance.now();
-      const realSeconds = Math.min(0.25, (now - lastTick.current) / 1000);
-      lastTick.current = now;
+  function litCount(rope: RopeState) {
+    return Number(rope.leftLit) + Number(rope.rightLit);
+  }
 
-      setGame((prev) => {
-        if (prev.paused) return prev;
+  function visualBurn(rope: RopeState) {
+    const progress = Math.max(0, Math.min(1, rope.burnUnits / 60));
+    // Intentionally nonlinear: visual rope length is NOT a clock.
+    return Math.round(Math.pow(progress, 0.72) * 100);
+  }
 
-        const hasBurning = (["A", "B"] as const).some((id) => {
-          const rope = prev.ropes[id];
-          return rope.doneAt === null && (rope.leftLit || rope.rightLit);
-        });
-        if (!hasBurning) return prev;
+  function toggleSetup(id: RopeId, end: "left" | "right") {
+    if (started) return;
+    setRopes((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [end === "left" ? "leftLit" : "rightLit"]: !prev[id][end === "left" ? "leftLit" : "rightLit"],
+      },
+    }));
+  }
 
-        const simDelta = realSeconds * speed;
-        const nextTime = prev.simTime + simDelta;
-        const nextRopes = { ...prev.ropes };
+  function startBurn() {
+    const a = litCount(ropes.A);
+    const b = litCount(ropes.B);
+    if (a === 0 && b === 0) return;
 
-        for (const id of ["A", "B"] as const) {
-          const rope = prev.ropes[id];
-          if (rope.doneAt !== null || (!rope.leftLit && !rope.rightLit)) continue;
+    const validOpening = (a === 2 && b === 1) || (a === 1 && b === 2);
+    const slower: RopeId | null = a === 1 && b === 2 ? "A" : b === 1 && a === 2 ? "B" : null;
 
-          const leftAdd = rope.leftLit ? simDelta : 0;
-          const rightAdd = rope.rightLit ? simDelta : 0;
-          const before = rope.burnedLeft + rope.burnedRight;
-          const requested = leftAdd + rightAdd;
-          const available = Math.max(0, 60 - before);
-          const factor = requested > 0 ? Math.min(1, available / requested) : 0;
+    setStarted(true);
+    setCorrectPath(validOpening);
+    setSlowRope(slower);
+    setFailed(false);
+    setLog((items) => [
+      validOpening
+        ? "Burn started. Watch for a rope to burn out — that event is your only timing clue."
+        : "Burn started. No exact time will be shown; use only what the ropes physically tell you.",
+      ...items,
+    ].slice(0, 6));
+    runToNextEvent(ropes, validOpening, slower);
+  }
 
-          const burnedLeft = rope.burnedLeft + leftAdd * factor;
-          const burnedRight = rope.burnedRight + rightAdd * factor;
-          const finished = burnedLeft + burnedRight >= 59.999;
-          let doneAt: number | null = rope.doneAt;
+  function runToNextEvent(
+    snapshot = ropes,
+    pathIsCorrect = correctPath,
+    trackedSlow = slowRope,
+  ) {
+    const candidates = (["A", "B"] as RopeId[])
+      .filter((id) => !snapshot[id].done && litCount(snapshot[id]) > 0)
+      .map((id) => ({
+        id,
+        rate: litCount(snapshot[id]),
+        untilDone: (60 - snapshot[id].burnUnits) / litCount(snapshot[id]),
+      }));
 
-          if (finished && doneAt === null) {
-            const rate = (rope.leftLit ? 1 : 0) + (rope.rightLit ? 1 : 0);
-            doneAt = prev.simTime + (60 - before) / Math.max(1, rate);
-          }
+    if (candidates.length === 0) {
+      setFailed(true);
+      setLog((items) => ["Nothing is burning. Reset and try a different setup.", ...items].slice(0, 6));
+      return;
+    }
 
-          nextRopes[id] = { ...rope, burnedLeft, burnedRight, doneAt };
-        }
+    const delta = Math.min(...candidates.map((item) => item.untilDone));
+    setRunning(true);
+    setCheckpoint(false);
 
-        return { ...prev, simTime: nextTime, ropes: nextRopes };
-      });
-    }, 100);
+    window.setTimeout(() => {
+      let newlyFinished: RopeId[] = [];
+      const next: Record<RopeId, RopeState> = {
+        A: { ...snapshot.A },
+        B: { ...snapshot.B },
+      };
 
-    return () => window.clearInterval(timer);
-  }, [speed]);
+      for (const id of ["A", "B"] as RopeId[]) {
+        const rope = snapshot[id];
+        if (rope.done) continue;
+        const rate = litCount(rope);
+        if (rate === 0) continue;
 
-  useEffect(() => {
-    for (const id of ["A", "B"] as const) {
-      const doneAt = game.ropes[id].doneAt;
-      if (doneAt !== null && seenDone.current[id] === null) {
-        seenDone.current[id] = doneAt;
-        const hitTarget = Math.abs(doneAt - 45) < 0.35;
+        const burnUnits = Math.min(60, rope.burnUnits + rate * delta);
+        const done = burnUnits >= 59.999;
+        if (done && !rope.done) newlyFinished.push(id);
+        next[id] = { ...rope, burnUnits, done };
+      }
+
+      setRopes(next);
+      setRunning(false);
+      setCheckpoint(true);
+
+      const correctFirstCheckpoint =
+        pathIsCorrect &&
+        trackedSlow !== null &&
+        newlyFinished.length === 1 &&
+        newlyFinished[0] !== trackedSlow &&
+        !next[trackedSlow].done;
+
+      if (correctFirstCheckpoint && next[trackedSlow].burnUnits < 59.999) {
         setLog((items) => [
-          hitTarget
-            ? `Rope ${id} finished at ${formatPuzzleTime(doneAt)} — target reached.`
-            : `Rope ${id} finished at ${formatPuzzleTime(doneAt)}. Clock auto-paused for your next move.`,
+          "One rope burned out. The simulation paused automatically. What should you light now?",
           ...items,
         ].slice(0, 6));
-        setGame((prev) => ({ ...prev, paused: true }));
-        if (hitTarget) {
-          setSolved(true);
-          saveSolved(riddleId);
-        }
+        return;
       }
-    }
-  }, [game.ropes, riddleId]);
 
-  function ignite(id: "A" | "B", end: "left" | "right") {
-    setGame((prev) => {
-      const rope = prev.ropes[id];
-      if (rope.doneAt !== null) return prev;
-      const key = end === "left" ? "leftLit" : "rightLit";
-      if (rope[key]) return prev;
-      return {
-        ...prev,
-        ropes: { ...prev.ropes, [id]: { ...rope, [key]: true } },
-      };
-    });
-    setLog((items) => [`Lit Rope ${id} — ${end} end at ${formatPuzzleTime(game.simTime)}.`, ...items].slice(0, 6));
+      if (trackedSlow !== null && newlyFinished.includes(trackedSlow) && pathIsCorrect && litCount(next[trackedSlow]) === 2) {
+        setSolved(true);
+        saveSolved(riddleId);
+        setLog((items) => [
+          "Solved. Your sequence measures exactly 45 minutes without ever reading a clock.",
+          ...items,
+        ].slice(0, 6));
+        return;
+      }
+
+      const allDone = next.A.done && next.B.done;
+      if (allDone) {
+        setFailed(true);
+        setLog((items) => [
+          "Both ropes are finished, but that sequence did not prove exactly 45 minutes. Reset and try again.",
+          ...items,
+        ].slice(0, 6));
+      } else {
+        setLog((items) => [
+          "A natural burn event occurred. The simulator paused, but your sequence is not yet a proven 45-minute measurement.",
+          ...items,
+        ].slice(0, 6));
+      }
+    }, 1800);
+  }
+
+  function igniteAtCheckpoint(id: RopeId, end: "left" | "right") {
+    if (!started || running || !checkpoint || ropes[id].done) return;
+    const key = end === "left" ? "leftLit" : "rightLit";
+    if (ropes[id][key]) return;
+
+    const next = {
+      ...ropes,
+      [id]: { ...ropes[id], [key]: true },
+    };
+    setRopes(next);
+
+    const stillCorrect =
+      correctPath &&
+      slowRope === id &&
+      litCount(next[id]) === 2;
+
+    setCorrectPath(stillCorrect);
+    setLog((items) => [
+      `Lit Rope ${id}'s other end at the burn-out checkpoint.`,
+      ...items,
+    ].slice(0, 6));
+  }
+
+  function resume() {
+    if (!checkpoint || running || solved || failed) return;
+    if (slowRope && correctPath && litCount(ropes[slowRope]) !== 2) {
+      setCorrectPath(false);
+    }
+    runToNextEvent(ropes, correctPath && (!slowRope || litCount(ropes[slowRope]) === 2), slowRope);
   }
 
   function reset() {
-    seenDone.current = { A: null, B: null };
+    setRopes({ A: fresh(), B: fresh() });
+    setStarted(false);
+    setRunning(false);
+    setCheckpoint(false);
+    setCorrectPath(false);
+    setSlowRope(null);
     setSolved(false);
-    setGame({ simTime: 0, paused: false, ropes: { A: freshRope(), B: freshRope() } });
-    setLog(["Simulation reset."]);
+    setFailed(false);
+    setLog(["Choose which rope ends to light. The clock is hidden on purpose."]);
   }
-
-  const isRunning = (["A", "B"] as const).some((id) => {
-    const rope = game.ropes[id];
-    return rope.doneAt === null && (rope.leftLit || rope.rightLit);
-  });
 
   return (
     <div className="puzzle-shell">
-      <div className="puzzle-hud" aria-label="Simulation status">
+      <div className="puzzle-hud rope-safe-hud" aria-label="Rope puzzle status">
         <div className="hud-stat">
-          <span className="hud-icon"><StatusIcon kind="time" /></span>
-          <span><small>PUZZLE CLOCK</small><strong>{formatPuzzleTime(game.simTime)}</strong></span>
+          <span className="hud-icon"><StatusIcon kind="moves" /></span>
+          <span><small>PHASE</small><strong>{!started ? "SETUP" : running ? "BURNING" : checkpoint ? "CHECKPOINT" : "READY"}</strong></span>
         </div>
         <div className="hud-stat">
           <span className="hud-icon"><StatusIcon kind="target" /></span>
-          <span><small>TARGET</small><strong>45:00</strong></span>
+          <span><small>GOAL</small><strong>EXACTLY 45 MIN</strong></span>
         </div>
         <div className="hud-stat">
-          <span className="hud-icon"><StatusIcon kind="moves" /></span>
-          <span><small>TIME SCALE</small><strong>{speed}×</strong></span>
+          <span className="hud-icon"><StatusIcon kind="time" /></span>
+          <span><small>CLOCK</small><strong>HIDDEN</strong></span>
         </div>
       </div>
 
       <section className="game-stage rope-stage">
         <div className="stage-head">
           <div>
-            <span className="stage-label">TIMING LAB</span>
-            <h2>Two uneven-burning ropes</h2>
+            <span className="stage-label">BURN TEST</span>
+            <h2>Use the ropes — not a timer</h2>
           </div>
-          <span className={`live-pill ${isRunning && !game.paused ? "active" : ""}`}>
-            <i /> {game.paused ? "PAUSED" : isRunning ? "RUNNING" : "READY"}
-          </span>
+          <span className={`live-pill ${running ? "active" : ""}`}><i /> {running ? "BURNING" : solved ? "SOLVED" : "READY"}</span>
         </div>
 
-        <div className="speed-control" aria-label="Simulation speed">
-          <span>Simulation speed</span>
-          <div className="segmented">
-            {[1, 2, 4].map((value) => (
-              <button key={value} className={speed === value ? "selected" : ""} onClick={() => setSpeed(value)}>
-                {value}×
-              </button>
-            ))}
-          </div>
-          <small>At 1×, one real second represents one puzzle minute.</small>
+        <div className="anti-cheat-note">
+          <span>NO CLOCK READOUT</span>
+          <p>The rope graphics are intentionally uneven and not proportional to time. A rope burning out is a valid clue; a percentage or countdown is not.</p>
         </div>
 
         <div className="rope-bay">
-          {(["A", "B"] as const).map((id) => {
-            const rope = game.ropes[id];
-            const leftPct = Math.min(100, (rope.burnedLeft / 60) * 100);
-            const rightPct = Math.min(100, (rope.burnedRight / 60) * 100);
-            const ropeStyle = {
-              "--burn-left": `${leftPct}%`,
-              "--burn-right": `${rightPct}%`,
+          {(["A", "B"] as RopeId[]).map((id) => {
+            const rope = ropes[id];
+            const pct = visualBurn(rope);
+            const style = {
+              "--burn-left": rope.leftLit ? `${Math.min(100, pct)}%` : "0%",
+              "--burn-right": rope.rightLit ? `${Math.min(100, pct * 0.62)}%` : "0%",
             } as CSSProperties;
 
             return (
-              <div className="rope-unit" key={id}>
+              <div className={`rope-unit ${rope.done ? "rope-done" : ""}`} key={id}>
                 <div className="rope-unit-head">
                   <span className="rope-name">ROPE {id}</span>
-                  <span className="rope-status">
-                    {rope.doneAt !== null ? `FINISHED · ${formatPuzzleTime(rope.doneAt)}` : `${Math.max(0, Math.round(60 - rope.burnedLeft - rope.burnedRight))} MIN REMAINING`}
-                  </span>
+                  <span className="rope-status">{rope.done ? "BURNED OUT" : running && litCount(rope) > 0 ? "BURNING" : litCount(rope) > 0 ? "LIT / READY" : "UNLIT"}</span>
                 </div>
                 <div className="rope-control-row">
-                  <button className={`igniter ${rope.leftLit ? "lit" : ""}`} disabled={rope.leftLit || rope.doneAt !== null} onClick={() => ignite(id, "left")}>
-                    <span className="flame">◆</span><span>LEFT END</span>
+                  <button
+                    className={`igniter ${rope.leftLit ? "lit" : ""}`}
+                    disabled={running || rope.done || (started && !checkpoint) || rope.leftLit}
+                    onClick={() => started ? igniteAtCheckpoint(id, "left") : toggleSetup(id, "left")}
+                  >
+                    <span className="flame">◆</span><span>{rope.leftLit ? "LEFT LIT" : "LIGHT LEFT"}</span>
                   </button>
 
-                  <div className="rope-graphic" style={ropeStyle}>
+                  <div className="rope-graphic" style={style}>
                     <div className="rope-cord" />
                     <div className="rope-char rope-char-left" />
                     <div className="rope-char rope-char-right" />
-                    {rope.leftLit && rope.doneAt === null ? <span className="rope-flame left">◆</span> : null}
-                    {rope.rightLit && rope.doneAt === null ? <span className="rope-flame right">◆</span> : null}
+                    {rope.leftLit && !rope.done ? <span className="rope-flame left">◆</span> : null}
+                    {rope.rightLit && !rope.done ? <span className="rope-flame right">◆</span> : null}
                   </div>
 
-                  <button className={`igniter ${rope.rightLit ? "lit" : ""}`} disabled={rope.rightLit || rope.doneAt !== null} onClick={() => ignite(id, "right")}>
-                    <span className="flame">◆</span><span>RIGHT END</span>
+                  <button
+                    className={`igniter ${rope.rightLit ? "lit" : ""}`}
+                    disabled={running || rope.done || (started && !checkpoint) || rope.rightLit}
+                    onClick={() => started ? igniteAtCheckpoint(id, "right") : toggleSetup(id, "right")}
+                  >
+                    <span className="flame">◆</span><span>{rope.rightLit ? "RIGHT LIT" : "LIGHT RIGHT"}</span>
                   </button>
                 </div>
               </div>
@@ -245,20 +325,24 @@ function RopePuzzle({ riddleId }: { riddleId: number }) {
         {solved ? (
           <div className="success-banner" role="status">
             <span className="success-mark">✓</span>
-            <div><strong>45 minutes measured.</strong><small>The interactive puzzle is complete.</small></div>
+            <div><strong>Correct sequence.</strong><small>You measured exactly 45 minutes using only burn-out events.</small></div>
           </div>
         ) : null}
 
-        <div className="control-dock">
-          <button className="control-button" onClick={() => setGame((prev) => ({ ...prev, paused: !prev.paused }))} disabled={!isRunning}>
-            {game.paused ? "Resume" : "Pause"}
-          </button>
-          <button className="control-button danger-lite" onClick={reset}>Reset simulation</button>
+        {failed ? <div className="error-banner">That sequence cannot prove exactly 45 minutes. Reset and try another setup.</div> : null}
+
+        <div className="control-dock rope-controls">
+          {!started ? (
+            <button className="action-button" onClick={startBurn} disabled={litCount(ropes.A) + litCount(ropes.B) === 0}>START BURN</button>
+          ) : (
+            <button className="action-button" onClick={resume} disabled={!checkpoint || running || solved || failed}>CONTINUE BURN</button>
+          )}
+          <button className="control-button danger-lite" onClick={reset}>RESET</button>
         </div>
       </section>
 
       <section className="telemetry-card">
-        <div className="telemetry-head"><span>EVENT LOG</span><span>LIVE</span></div>
+        <div className="telemetry-head"><span>OBSERVATION LOG</span><span>NO TIMES SHOWN</span></div>
         <div className="event-log">
           {log.map((item, index) => <div key={`${item}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><p>{item}</p></div>)}
         </div>
@@ -558,12 +642,114 @@ function BridgePuzzle({ riddleId }: { riddleId: number }) {
   );
 }
 
+function SwitchesPuzzle({ riddleId }: { riddleId: number }) {
+  const [control] = useState<1 | 2 | 3>(() => {
+    if (typeof crypto === "undefined") return 2;
+    const values = new Uint32Array(1);
+    crypto.getRandomValues(values);
+    return ((values[0] % 3) + 1) as 1 | 2 | 3;
+  });
+  const [switches, setSwitches] = useState<Record<1 | 2 | 3, boolean>>({ 1:false, 2:false, 3:false });
+  const [heat, setHeat] = useState(0);
+  const [entered, setEntered] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const [guess, setGuess] = useState<1 | 2 | 3 | null>(null);
+  const [message, setMessage] = useState("");
+
+  function toggle(id: 1 | 2 | 3) {
+    if (entered) return;
+    setSwitches((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function wait() {
+    if (entered) return;
+    if (switches[control]) setHeat((value) => Math.min(3, value + 1));
+  }
+
+  function enterRoom() {
+    if (entered) return;
+    setEntered(true);
+  }
+
+  function submit() {
+    if (guess === null) return;
+    if (guess === control) {
+      setMessage("Correct — you identified the controlling switch.");
+      saveSolved(riddleId);
+    } else {
+      setMessage("Wrong switch. Reset tomorrow's logic in your head and try the method again.");
+    }
+  }
+
+  const bulbOn = switches[control];
+
+  return (
+    <div className="puzzle-shell">
+      <div className="puzzle-hud">
+        <div className="hud-stat"><span className="hud-icon"><StatusIcon kind="moves" /></span><span><small>ROOM ENTRIES</small><strong>{entered ? "1 / 1" : "0 / 1"}</strong></span></div>
+        <div className="hud-stat"><span className="hud-icon"><StatusIcon kind="target" /></span><span><small>SWITCHES</small><strong>3</strong></span></div>
+        <div className="hud-stat"><span className="hud-icon"><StatusIcon kind="time" /></span><span><small>BULB</small><strong>{entered ? (bulbOn ? "ON" : "OFF") : "HIDDEN"}</strong></span></div>
+      </div>
+
+      <section className="game-stage switch-stage">
+        <div className="stage-head">
+          <div><span className="stage-label">ELECTRICAL TEST</span><h2>Three switches. One room entry.</h2></div>
+          <span className="live-pill active"><i /> {entered ? "INSIDE ROOM" : "OUTSIDE ROOM"}</span>
+        </div>
+
+        <div className="switch-layout">
+          <div className="switch-bank">
+            {[1,2,3].map((raw) => {
+              const id = raw as 1|2|3;
+              return <button key={id} className={`wall-switch ${switches[id] ? "on" : ""}`} onClick={() => toggle(id)} disabled={entered}>
+                <span className="switch-track"><i /></span>
+                <strong>SWITCH {id}</strong>
+                <small>{switches[id] ? "ON" : "OFF"}</small>
+              </button>;
+            })}
+            <button className="control-button wait-button" onClick={wait} disabled={entered}>WAIT A FEW MINUTES</button>
+          </div>
+
+          <div className={`bulb-room ${entered ? "open" : ""}`}>
+            <div className="door">{entered ? <span>ROOM OPEN</span> : <span>ROOM CLOSED</span>}</div>
+            {entered ? (
+              <div className={`bulb-fixture ${bulbOn ? "on" : ""}`}>
+                <div className="bulb-glow" />
+                <div className="bulb" />
+                <strong>{bulbOn ? "THE BULB IS ON" : "THE BULB IS OFF"}</strong>
+                <button className="control-button" onClick={() => setTouched(true)}>TOUCH BULB</button>
+                {touched ? <small>{heat > 0 ? "The bulb feels warm." : "The bulb feels cool."}</small> : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {!entered ? (
+          <div className="control-dock"><button className="action-button" onClick={enterRoom}>ENTER ROOM — ONE CHANCE</button></div>
+        ) : (
+          <div className="diagnosis-panel">
+            <div><span className="stage-label">FINAL ANSWER</span><h3>Which switch controls the bulb?</h3></div>
+            <div className="diagnosis-controls">
+              <select value={guess ?? ""} onChange={(e) => setGuess((Number(e.target.value) || null) as 1|2|3|null)}>
+                <option value="">Choose switch</option><option value="1">Switch 1</option><option value="2">Switch 2</option><option value="3">Switch 3</option>
+              </select>
+              <button className="action-button" onClick={submit} disabled={guess === null}>SUBMIT</button>
+            </div>
+            {message ? <div className={message.startsWith("Correct") ? "success-banner compact" : "error-banner"}>{message}</div> : null}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
 export default function PuzzleClient({ type, riddleId }: { type: PuzzleType; riddleId: number }) {
   return (
     <>
       {type === "rope" ? <RopePuzzle riddleId={riddleId} /> : null}
       {type === "coins" ? <CoinsPuzzle riddleId={riddleId} /> : null}
       {type === "bridge" ? <BridgePuzzle riddleId={riddleId} /> : null}
+      {type === "switches" ? <SwitchesPuzzle riddleId={riddleId} /> : null}
       <div className="puzzle-footer"><Link href="/">← Back to today&apos;s riddle</Link><span>Progress saves on this device.</span></div>
     </>
   );
