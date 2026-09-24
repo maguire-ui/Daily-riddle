@@ -1474,3 +1474,15 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
   .lock-display span{min-height:58px;font-size:30px}
   .lock-keypad button{min-height:54px}
 }
+
+
+/* Keep current light puzzle controls light on pointer hover.
+   Overrides an older dark-theme .control-button:hover rule above. */
+.control-button:hover:not(:disabled){
+  background:#FFF7EC;
+  color:var(--ink);
+}
+.control-button.danger-lite:hover:not(:disabled){
+  background:#FFF0EC;
+  color:var(--red);
+}
