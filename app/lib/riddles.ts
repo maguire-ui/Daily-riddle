@@ -7,7 +7,7 @@ export type Riddle = {
   category: string;
   difficulty: "Hard" | "Brutal" | "Insane";
   question: string;
-  visualizer: "rope" | "coins" | "bridge" | "switches";
+  visualizer: "rope" | "coins" | "bridge" | "switches" | "lock";
   accepted?: string[];
   requiredConcepts: string[][];
   forbiddenConcepts?: string[];
@@ -124,6 +124,28 @@ export const RIDDLES: Riddle[] = [
   },
 ];
 
+export const TEST_RIDDLE: Riddle = {
+  id: 5,
+  slug: "museum-lock",
+  title: "The Museum Lock",
+  category: "Code Breaking",
+  difficulty: "Hard",
+  question:
+    "A museum display is protected by a 3-digit code with no repeated digits. You find three exact clues: 013 — none of these digits are in the code. 052 — exactly two digits are in the code, but both are in the wrong positions. 017 — exactly one digit is in the code and it is in the correct position. What is the code?",
+  visualizer: "lock",
+  accepted: ["527"],
+  requiredConcepts: [["527"]],
+  solution:
+    "The code is 527. Clue 013 removes 0, 1, and 3. That makes the two correct digits in 052 be 5 and 2, both misplaced. In 017, only 7 can be correct, so 7 must be in the third position. The remaining slots belong to 5 and 2; because 5 was misplaced in the middle position of 052, 5 must go first and 2 second.",
+  steps: [
+    "013 eliminates 0, 1, and 3 completely.",
+    "So in 052, the two correct digits must be 5 and 2, and both are misplaced.",
+    "In 017, only 7 remains possible, so 7 is correct in the third position.",
+    "The first two positions must be 5 and 2.",
+    "Because 5 cannot be in the middle position, the unique code is 527.",
+  ],
+};
+
 export const START_DAY = "2026-09-22";
 
 export function normalize(s: string) {
@@ -209,4 +231,11 @@ export function getCurrentRiddle(now = new Date()) {
 export function getPreviousRiddle(now = new Date()) {
   const index = dayDiff(START_DAY, currentDayKey(now)) - 1;
   return index >= 0 && index < RIDDLES.length ? RIDDLES[index] : null;
+}
+
+// Temporary live override for the requested one-off test.
+// It intentionally does not enter RIDDLES, so archive/history and the permanent
+// no-repeat schedule remain untouched.
+export function getLiveRiddle(_now = new Date()) {
+  return TEST_RIDDLE;
 }
