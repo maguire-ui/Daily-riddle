@@ -66,7 +66,7 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
   }
 
   return (
-    <main className="app shell">
+    <main className={`app shell riddle-theme riddle-${riddle.id}`}>
       <header className="site-header">
         <Link className="wordmark" href="/">
           <span className="wordmark-box">DR</span>
