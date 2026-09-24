@@ -159,6 +159,11 @@ function SolvedToday({ riddle, remaining, guessCount, onRepeat }: { riddle: Publ
             <span>•</span>
             <Link href="/archive">Past riddles</Link>
           </div>
+
+          <button className="repeat-riddle-button" type="button" onClick={onRepeat}>
+            <span className="repeat-icon">↻</span>
+            <span><strong>Repeat riddle</strong><small>Play it again</small></span>
+          </button>
         </section>
 
         <section className="next-riddle-countdown" aria-label="Countdown until next riddle">
@@ -168,10 +173,6 @@ function SolvedToday({ riddle, remaining, guessCount, onRepeat }: { riddle: Publ
         </section>
       </div>
 
-      <button className="repeat-riddle-float" type="button" onClick={onRepeat}>
-        <span className="repeat-icon">↻</span>
-        <span><strong>Repeat riddle</strong><small>Play it again</small></span>
-      </button>
     </main>
   );
 }
