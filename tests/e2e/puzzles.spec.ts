@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 async function openPuzzle(page: Page, type: string, query = "") {
-  await page.goto(`/__test/puzzle/${type}${query}`);
+  await page.goto(`/test-puzzle/${type}${query}`);
   await page.waitForLoadState("domcontentloaded");
 }
 
