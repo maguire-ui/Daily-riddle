@@ -1166,15 +1166,15 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
 .next-riddle-countdown>span{font-family:var(--font-heading);font-size:13px;font-weight:800;color:var(--muted)}
 .next-riddle-countdown strong{font-family:var(--font-heading);font-size:clamp(48px,10vw,92px);line-height:1;letter-spacing:-.055em;font-variant-numeric:tabular-nums;color:var(--ink)}
 .next-riddle-countdown small{font-size:9px;font-weight:750;color:var(--muted)}
-.repeat-riddle-float{
-  position:fixed;right:18px;top:50%;z-index:5;transform:translateY(-50%) rotate(-1deg);
-  min-height:62px;padding:8px 13px 8px 9px;display:flex;align-items:center;gap:9px;border:1.5px solid var(--ink);border-radius:18px 12px 15px 13px;
-  background:var(--paper);color:var(--ink);box-shadow:5px 6px 0 var(--ink);transition:transform var(--quick) var(--spring),box-shadow var(--quick)
+.repeat-riddle-button{
+  margin:18px auto 0;min-height:62px;padding:8px 15px 8px 9px;display:flex;align-items:center;gap:10px;
+  border:1.5px solid var(--ink);border-radius:18px 12px 15px 13px;background:var(--paper);color:var(--ink);
+  box-shadow:5px 6px 0 var(--ink);transition:transform var(--quick) var(--spring),box-shadow var(--quick)
 }
-.repeat-riddle-float:active{transform:translateY(calc(-50% + 4px)) rotate(-1deg);box-shadow:2px 2px 0 var(--ink)}
+.repeat-riddle-button:active{transform:translateY(4px) rotate(-.5deg);box-shadow:2px 2px 0 var(--ink)}
 .repeat-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--gold);font-size:22px;font-weight:900}
-.repeat-riddle-float>span:last-child{display:grid;text-align:left;gap:1px}
-.repeat-riddle-float strong{font-family:var(--font-heading);font-size:12px}.repeat-riddle-float small{font-size:9px;color:var(--muted);font-weight:700}
+.repeat-riddle-button>span:last-child{display:grid;text-align:left;gap:1px}
+.repeat-riddle-button strong{font-family:var(--font-heading);font-size:12px}.repeat-riddle-button small{font-size:9px;color:var(--muted);font-weight:700}
 @keyframes successSpark{from{transform:translateY(0) rotate(-5deg) scale(.92)}to{transform:translateY(-6px) rotate(8deg) scale(1.08)}}
 
 /* Visual solution replay */
