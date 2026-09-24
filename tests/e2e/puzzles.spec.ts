@@ -101,7 +101,7 @@ for (const control of [1, 2, 3] as const) {
   });
 }
 
-test("live museum-lock riddle rejects a wrong code and accepts the unique code", async ({ page }) => {
+test("live black-glass vault rejects a wrong code and accepts the unique code", async ({ page }) => {
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
 
@@ -315,7 +315,7 @@ test("temporary test riddle keeps the normal midnight countdown", async ({ page 
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
 
-  await expect(page.getByText("NEXT PUZZLE", { exact: true })).toBeVisible();
+  await expect(page.getByText("Next puzzle", { exact: true })).toBeVisible();
   await expect(page.locator(".drop-clock strong")).toHaveText(/\d{2}:\d{2}:\d{2}/);
 });
 
