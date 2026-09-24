@@ -163,6 +163,62 @@ function Confetti() {
   return <span className="confetti" aria-hidden="true">{Array.from({length:12},(_,i)=><i key={i} style={{"--i":i} as React.CSSProperties}/>)}</span>;
 }
 
+function SolvedToday({ riddle, remaining, guessCount, onRepeat }: { riddle: PublicRiddle; remaining: string; guessCount: number; onRepeat: () => void }) {
+  return (
+    <main className="solved-today-screen">
+      <div className="solved-background-doodles" aria-hidden="true">
+        <span>✦</span><span>○</span><span>✓</span>
+      </div>
+      <div className="solved-shell">
+        <header className="game-topbar solved-topbar">
+          <Link className="game-brand" href="/" aria-label="Daily Riddle home">
+            <span className="brand-mark"><i/><i/><i/></span>
+            <span><strong>Daily Riddle</strong><small>one clever challenge a day</small></span>
+          </Link>
+          <div className="topbar-actions">
+            <SoundToggle compact />
+            <Link className="icon-link" href="/archive" aria-label="Open riddle archive">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14v12H5zM8 4h8v3H8zM9 11h6M9 15h4"/></svg>
+            </Link>
+          </div>
+        </header>
+
+        <section className="solved-hero">
+          <div className="solved-check-wrap">
+            <span className="solved-check">✓</span>
+            <span className="solved-spark one">✦</span>
+            <span className="solved-spark two">✦</span>
+            <span className="solved-spark three">•</span>
+          </div>
+          <span className="tiny-kicker">TODAY&apos;S RIDDLE · #{String(riddle.id).padStart(3,"0")}</span>
+          <h1>You solved today&apos;s riddle!</h1>
+          <p className="solved-riddle-name">{riddle.title}</p>
+          <p className="solved-copy">
+            Nice work. Your solve is saved on this device{guessCount > 0 ? ` after ${guessCount} ${guessCount === 1 ? "guess" : "guesses"}` : ""}.
+          </p>
+
+          <div className="solved-links">
+            <Link href="/yesterday">Yesterday&apos;s solution</Link>
+            <span>•</span>
+            <Link href="/archive">Past riddles</Link>
+          </div>
+        </section>
+
+        <section className="next-riddle-countdown" aria-label="Countdown until next riddle">
+          <span>Next riddle arrives in</span>
+          <strong>{remaining || "--:--:--"}</strong>
+          <small>Resets at midnight · America/Edmonton</small>
+        </section>
+      </div>
+
+      <button className="repeat-riddle-float" type="button" onClick={onRepeat}>
+        <span className="repeat-icon">↻</span>
+        <span><strong>Repeat riddle</strong><small>Play it again</small></span>
+      </button>
+    </main>
+  );
+}
+
 export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle; unlockAt: string }) {
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<null | boolean>(null);
@@ -170,6 +226,7 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
   const [solved, setSolved] = useState(false);
   const [remaining, setRemaining] = useState("");
   const [puzzleOpen, setPuzzleOpen] = useState(false);
+  const [repeating, setRepeating] = useState(false);
 
   const storageKey = useMemo(() => `daily-riddle-${riddle.id}`, [riddle.id]);
 
@@ -200,6 +257,8 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
       const detail = (event as CustomEvent<{ riddleId: number }>).detail;
       if (detail?.riddleId === riddle.id) {
         setSolved(true);
+        setRepeating(false);
+        setPuzzleOpen(false);
       }
     };
     window.addEventListener("daily-riddle-solved", onSolved);
@@ -235,6 +294,7 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
 
     if (correct) {
       setSolved(true);
+      setRepeating(false);
       playUiSound("success");
     } else {
       playUiSound("wrong");
@@ -246,6 +306,22 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
   function tactilePress(event: React.PointerEvent<HTMLElement>) {
     const target = event.target as HTMLElement;
     if (target.closest("button, a, [role='button']")) playUiSound("tap");
+  }
+
+  if (solved && !repeating) {
+    return (
+      <SolvedToday
+        riddle={riddle}
+        remaining={remaining}
+        guessCount={guessCount}
+        onRepeat={() => {
+          playUiSound("tap");
+          setRepeating(true);
+          setResult(null);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
+    );
   }
 
   return (
