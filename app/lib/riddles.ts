@@ -126,23 +126,23 @@ export const RIDDLES: Riddle[] = [
 
 export const TEST_RIDDLE: Riddle = {
   id: 5,
-  slug: "museum-lock",
-  title: "The Museum Lock",
+  slug: "black-glass-vault",
+  title: "The Black Glass Vault",
   category: "Code Breaking",
-  difficulty: "Hard",
+  difficulty: "Brutal",
   question:
-    "A museum display is protected by a 3-digit code with no repeated digits. You find three exact clues: 013 — none of these digits are in the code. 052 — exactly two digits are in the code, but both are in the wrong positions. 017 — exactly one digit is in the code and it is in the correct position. What is the code?",
+    "A black-glass vault uses a 4-digit code with no repeated digits. Each clue is exact: 2589 — three digits are in the code, all in the wrong positions. 9452 — two digits are in the code, both in the wrong positions. 9458 — two digits are in the code: one is in the correct position and one is in the wrong position. 6517 — two digits are in the code, both in the wrong positions. 0748 — two digits are in the code, and both are in the correct positions. What is the code?",
   visualizer: "lock",
-  accepted: ["527"],
-  requiredConcepts: [["527"]],
+  accepted: ["5728"],
+  requiredConcepts: [["5728"]],
   solution:
-    "The code is 527. Clue 013 removes 0, 1, and 3. That makes the two correct digits in 052 be 5 and 2, both misplaced. In 017, only 7 can be correct, so 7 must be in the third position. The remaining slots belong to 5 and 2; because 5 was misplaced in the middle position of 052, 5 must go first and 2 second.",
+    "The unique code is 5728. The five clues form a Mastermind-style constraint system: every line gives an exact count of matching digits and exact placement information. Working through the overlaps leaves only 5, 7, 2, and 8, with 7 fixed second and 8 fixed fourth by 0748. The remaining placement constraints force 5 first and 2 third.",
   steps: [
-    "013 eliminates 0, 1, and 3 completely.",
-    "So in 052, the two correct digits must be 5 and 2, and both are misplaced.",
-    "In 017, only 7 remains possible, so 7 is correct in the third position.",
-    "The first two positions must be 5 and 2.",
-    "Because 5 cannot be in the middle position, the unique code is 527.",
+    "Treat every clue as exact: no extra hidden matches are allowed.",
+    "0748 says two digits are correct and correctly placed. Combined with the other clues, those positions resolve to 7 in position 2 and 8 in position 4.",
+    "2589 contains three correct digits, all misplaced. With 8 already known, the other two surviving digits from that clue must be 5 and 2.",
+    "9452 and 6517 rule out the remaining alternate placements for 5 and 2.",
+    "The only 4-digit no-repeat code satisfying all five clues is 5728.",
   ],
 };
 
