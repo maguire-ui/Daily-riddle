@@ -186,7 +186,7 @@ for (const viewport of [
 test("solution reveal and archive pages load in the same visual system", async ({ page }) => {
   await page.goto("/yesterday");
   await page.waitForLoadState("domcontentloaded");
-  await expect(page.getByText(/YESTERDAY'S SOLUTION/i)).toBeVisible();
+  await expect(page.getByText("YESTERDAY'S SOLUTION", { exact: true })).toBeVisible();
   await expect(page.getByText(/Here's how it works/i)).toBeVisible();
 
   await page.goto("/archive");
