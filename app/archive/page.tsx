@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { RIDDLES, START_DAY, currentDayKey, dayDiff } from "../lib/riddles";
-import SoundToggle from "../components/SoundToggle";
+import SecondaryHeader from "../components/SecondaryHeader";
 
 export default function ArchivePage() {
   const publishedCount = Math.max(0, Math.min(RIDDLES.length, dayDiff(START_DAY, currentDayKey(new Date()))));
@@ -9,10 +9,7 @@ export default function ArchivePage() {
   return (
     <main className="journal-page archive-page">
       <div className="journal-shell">
-        <header className="journal-topbar">
-          <Link href="/" className="journal-brand">Daily Riddle</Link>
-          <div className="topbar-actions"><SoundToggle compact /><Link className="ghost mini" href="/">Today</Link></div>
-        </header>
+        <SecondaryHeader kicker="PUZZLE JOURNAL" title="Past riddles" closeHref="/" closeLabel="Close archive" />
 
         <section className="archive-heading">
           <span className="tiny-kicker">PUZZLE JOURNAL</span>
