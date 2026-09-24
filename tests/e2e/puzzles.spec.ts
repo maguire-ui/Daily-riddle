@@ -110,7 +110,13 @@ test("typed bridge answer rejects only-the-number and accepts the actual method"
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
   await expect(page.getByText(/Not quite/)).toBeVisible();
 
-  await input.fill("1 and 2 cross, 1 returns, 7 and 10 cross, 2 returns, then 1 and 2 cross again for 17 minutes.");
+  await input.fill(`What you would want to do is:
+
+1. Take the 1 and the 2 down.
+2. Bring the 1 back.
+3. Bring the 7 and the 10 down.
+4. Take the 2 back.
+5. Move the 1 and the 2 down to get exactly 17 minutes.`);
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
 
   await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
@@ -234,4 +240,29 @@ test("solved screen stays inside a narrow phone viewport", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(1);
   await expect(page.locator(".next-riddle-countdown strong")).toBeVisible();
   await expect(page.getByRole("button", { name: /Repeat riddle/i })).toBeVisible();
+});
+
+
+test("homepage illustration stays scene-first instead of repeating riddle instructions", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
+  const illustration = page.locator("figure.illustration-wrap");
+  await expect(illustration.locator("svg")).toBeVisible();
+  await expect(illustration.locator("svg text")).toHaveCount(0);
+});
+
+test("secondary pages use the same top-right close pattern", async ({ page }) => {
+  await page.goto("/yesterday");
+  await expect(page.getByRole("link", { name: "Close solution" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Today", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Back to today's riddle/i })).toHaveCount(0);
+
+  await page.goto("/archive");
+  await expect(page.getByRole("link", { name: "Close archive" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Today", exact: true })).toHaveCount(0);
+
+  await page.goto("/yesterday/play");
+  await expect(page.getByRole("link", { name: "Close solution animation" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Solution$/ })).toHaveCount(0);
 });
