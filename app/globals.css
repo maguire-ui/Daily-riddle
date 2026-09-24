@@ -1017,3 +1017,52 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
 }
+
+
+/* Journal reveal + archive */
+.journal-page{min-height:100dvh;padding:env(safe-area-inset-top) 0 calc(40px + env(safe-area-inset-bottom));background:transparent;color:var(--ink)}
+.journal-shell{width:min(100% - 28px,820px);margin:0 auto}
+.journal-topbar{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(32,39,53,.1)}
+.journal-brand{font-family:var(--font-heading);font-size:18px;font-weight:800;letter-spacing:-.035em}
+.ghost.mini{min-height:42px;padding:0 12px}
+.solution-heading,.archive-heading{position:relative;padding:38px 3px 24px}
+.solution-heading h1,.archive-heading h1{margin:8px 0 0;font-family:var(--font-heading);font-size:clamp(40px,7vw,68px);line-height:.95;letter-spacing:-.055em}
+.solution-heading>p,.archive-heading>p{margin:10px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
+.solution-scribble,.archive-heading svg{position:absolute;right:2px;bottom:8px;width:150px;fill:none;stroke:rgba(255,112,88,.5);stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.solution-paper{position:relative;background:var(--paper);border:1.5px solid var(--line);border-radius:22px 27px 20px 24px;box-shadow:8px 8px 0 var(--shadow);padding:27px 27px 23px;animation:paperEnter .48s var(--spring) both}
+.solution-paper::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(32,39,53,.018) 1px,transparent 1px);background-size:100% 28px;border-radius:inherit;pointer-events:none}
+.solution-paper>*{position:relative}
+.solution-tape{right:42px;top:-11px}
+.solution-lead{font-family:var(--font-heading);font-size:clamp(19px,2.6vw,25px);line-height:1.5;letter-spacing:-.02em;margin:0 0 25px}
+.solution-rule{display:flex;align-items:center;gap:10px;margin:0 0 3px}
+.solution-rule::after{content:"";height:1px;background:var(--line);flex:1}
+.solution-rule span{font-size:9px;font-weight:900;letter-spacing:.13em;color:var(--teal-dark)}
+.solution-steps{display:grid}
+.solution-step{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;padding:14px 0;border-bottom:1px dashed var(--line)}
+.solution-step:last-child{border-bottom:0}
+.solution-step p{margin:3px 0 0;font-size:12px;line-height:1.55;color:var(--ink-2)}
+.back-journal{display:inline-flex;margin:22px 3px 0;font-size:11px;font-weight:850;color:var(--ink)}
+.back-journal:hover{color:var(--coral-dark)}
+.no-reveal{text-align:center;padding:72px 20px}
+.no-reveal>span{display:grid;place-items:center;width:68px;height:68px;margin:0 auto 15px;border:2px solid var(--ink);border-radius:50%;background:var(--gold);font-family:var(--font-heading);font-size:38px;font-weight:900;transform:rotate(-6deg)}
+.no-reveal h1{font-family:var(--font-heading);font-size:34px;margin:0}.no-reveal p{color:var(--muted);line-height:1.5;max-width:390px;margin:8px auto 18px}
+
+.archive-heading svg{stroke:rgba(37,183,165,.5);width:115px}
+.archive-list{border-top:1.5px solid var(--line-2);margin-top:4px}
+.archive-entry{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr) 32px;gap:14px;align-items:center;min-height:100px;padding:15px 3px;border-bottom:1px dashed var(--line);transition:transform var(--quick),background var(--quick)}
+.archive-entry:hover{transform:translateX(4px);background:rgba(255,255,255,.28)}
+.archive-index{font-family:var(--font-heading);font-size:25px;font-weight:850;color:var(--coral);transform:rotate(-4deg)}
+.archive-meta{font-size:8px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.archive-entry h2{margin:4px 0 0;font-family:var(--font-heading);font-size:22px;letter-spacing:-.03em}
+.archive-mark{font-family:var(--font-heading);font-size:24px;color:var(--teal);transform:rotate(8deg)}
+
+@media(max-width:520px){
+  .journal-shell{width:min(100% - 18px,820px)}
+  .solution-heading,.archive-heading{padding-top:28px}
+  .solution-scribble,.archive-heading svg{display:none}
+  .solution-paper{padding:22px 15px 18px;box-shadow:6px 6px 0 var(--shadow)}
+  .solution-step{grid-template-columns:31px 1fr;gap:9px}
+  .archive-entry{grid-template-columns:42px minmax(0,1fr) 24px;gap:9px;min-height:91px}
+  .archive-entry h2{font-size:19px}
+  .archive-index{font-size:22px}
+}
