@@ -124,7 +124,7 @@ export const RIDDLES: Riddle[] = [
   },
 ];
 
-export const START_DAY = "2026-09-21";
+export const START_DAY = "2026-09-22";
 
 export function normalize(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
