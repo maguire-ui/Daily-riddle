@@ -107,9 +107,76 @@ test("typed bridge answer rejects only-the-number and accepts the actual method"
   const input = page.getByLabel("Your solution");
   await input.fill("17");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
-  await expect(page.getByText("Not quite.")).toBeVisible();
+  await expect(page.getByText(/Not quite/)).toBeVisible();
 
   await input.fill("1 and 2 cross, 1 returns, 7 and 10 cross, 2 returns, then 1 and 2 cross again for 17 minutes.");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
-  await expect(page.getByText("Correct.")).toBeVisible();
+  await expect(page.getByText(/You got it/)).toBeVisible();
+});
+
+
+test("home opens the interactive puzzle in-place and returns without navigation", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
+  const before = page.url();
+  await page.getByRole("button", { name: /Try the interactive puzzle/i }).click();
+  const dialog = page.getByRole("dialog", { name: /Interactive puzzle/i });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("Get everyone across")).toBeVisible();
+  expect(page.url()).toBe(before);
+
+  await page.getByRole("button", { name: "Close interactive puzzle" }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(page.url()).toBe(before);
+});
+
+test("sound preference is remembered locally", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
+  const offButton = page.getByRole("button", { name: "Turn sound effects off" });
+  await expect(offButton).toBeVisible();
+  await offButton.click();
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Turn sound effects on" })).toBeVisible();
+
+  // Restore the default for any later test in the same browser context.
+  await page.getByRole("button", { name: "Turn sound effects on" }).click();
+});
+
+for (const viewport of [
+  { width: 375, height: 812, label: "narrow phone" },
+  { width: 430, height: 932, label: "large phone" },
+  { width: 768, height: 1024, label: "tablet" },
+  { width: 1440, height: 900, label: "desktop" },
+]) {
+  test(`layout has no horizontal overflow on ${viewport.label}`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+
+    if (viewport.width <= 430) {
+      await page.getByRole("button", { name: /Try the interactive puzzle/i }).click();
+      const overlayOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overlayOverflow).toBeLessThanOrEqual(1);
+      await expect(page.getByRole("button", { name: "Close interactive puzzle" })).toBeVisible();
+    }
+  });
+}
+
+test("solution reveal and archive pages load in the same visual system", async ({ page }) => {
+  await page.goto("/yesterday");
+  await page.waitForLoadState("domcontentloaded");
+  await expect(page.getByText(/YESTERDAY'S SOLUTION/i)).toBeVisible();
+  await expect(page.getByText(/Here's how it works/i)).toBeVisible();
+
+  await page.goto("/archive");
+  await page.waitForLoadState("domcontentloaded");
+  await expect(page.getByText("Past riddles", { exact: true })).toBeVisible();
+  await expect(page.getByText(/No peeking ahead/i)).toBeVisible();
 });
