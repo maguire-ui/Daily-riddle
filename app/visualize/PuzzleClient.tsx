@@ -353,22 +353,26 @@ function RopePuzzle({ riddleId }: { riddleId: number }) {
 
 type HiddenCoin = { coin: number; polarity: "heavy" | "light" };
 
-function CoinsPuzzle({ riddleId }: { riddleId: number }) {
+function CoinsPuzzle({ riddleId, testHidden }: { riddleId: number; testHidden?: HiddenCoin }) {
   const [hidden, setHidden] = useState<HiddenCoin | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [left, setLeft] = useState<number[]>([]);
   const [right, setRight] = useState<number[]>([]);
   const [snapshots, setSnapshots] = useState<Array<{ left: number[]; right: number[] }>>([]);
-  const [history, setHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<Array<{ left:number[]; right:number[]; outcome:string }>>([]);
   const [lastOutcome, setLastOutcome] = useState<"balance" | "left" | "right" | null>(null);
   const [finalCoin, setFinalCoin] = useState<number | null>(null);
   const [heavyLight, setHeavyLight] = useState<"heavy" | "light">("heavy");
   const [message, setMessage] = useState("");
 
   function newRound() {
-    const values = new Uint32Array(2);
-    crypto.getRandomValues(values);
-    setHidden({ coin: (values[0] % 12) + 1, polarity: values[1] % 2 === 0 ? "heavy" : "light" });
+    if (testHidden) {
+      setHidden(testHidden);
+    } else {
+      const values = new Uint32Array(2);
+      crypto.getRandomValues(values);
+      setHidden({ coin: (values[0] % 12) + 1, polarity: values[1] % 2 === 0 ? "heavy" : "light" });
+    }
     setSelected(null);
     setLeft([]);
     setRight([]);
@@ -426,7 +430,7 @@ function CoinsPuzzle({ riddleId }: { riddleId: number }) {
     const outcome = Math.abs(l - r) < 0.01 ? "balance" : l > r ? "left" : "right";
     const label = outcome === "balance" ? "BALANCED" : outcome === "left" ? "LEFT HEAVIER" : "RIGHT HEAVIER";
     setLastOutcome(outcome);
-    setHistory((items) => [...items, label]);
+    setHistory((items) => [...items, { left:[...left], right:[...right], outcome:label }]);
   }
 
   function submitGuess() {
@@ -496,7 +500,7 @@ function CoinsPuzzle({ riddleId }: { riddleId: number }) {
         </div>
 
         <div className="weigh-history">
-          {[0, 1, 2].map((index) => <div key={index} className={history[index] ? "filled" : ""}><span>0{index + 1}</span><strong>{history[index] || "Awaiting result"}</strong></div>)}
+          {[0, 1, 2].map((index) => { const item=history[index]; return <div key={index} className={item ? "filled" : ""}><span>0{index + 1}</span><strong>{item ? `${item.left.join(",") || "—"} vs ${item.right.join(",") || "—"} · ${item.outcome}` : "Awaiting result"}</strong></div>; })}
         </div>
 
         <div className="diagnosis-panel">
@@ -642,8 +646,15 @@ function BridgePuzzle({ riddleId }: { riddleId: number }) {
   );
 }
 
-function SwitchesPuzzle({ riddleId }: { riddleId: number }) {
-  const [control] = useState<1 | 2 | 3>(2);
+function SwitchesPuzzle({ riddleId, testControl }: { riddleId: number; testControl?: 1 | 2 | 3 }) {
+  const [control, setControl] = useState<1 | 2 | 3 | null>(testControl ?? null);
+
+  useEffect(() => {
+    if (testControl || control !== null) return;
+    const values = new Uint32Array(1);
+    crypto.getRandomValues(values);
+    setControl(((values[0] % 3) + 1) as 1 | 2 | 3);
+  }, [control, testControl]);
   const [switches, setSwitches] = useState<Record<1 | 2 | 3, boolean>>({ 1:false, 2:false, 3:false });
   const [heat, setHeat] = useState(0);
   const [entered, setEntered] = useState(false);
@@ -658,7 +669,7 @@ function SwitchesPuzzle({ riddleId }: { riddleId: number }) {
 
   function wait() {
     if (entered) return;
-    if (switches[control]) setHeat((value) => Math.min(3, value + 1));
+    if (control !== null && switches[control]) setHeat((value) => Math.min(3, value + 1));
   }
 
   function enterRoom() {
@@ -668,7 +679,7 @@ function SwitchesPuzzle({ riddleId }: { riddleId: number }) {
 
   function submit() {
     if (guess === null) return;
-    if (guess === control) {
+    if (control !== null && guess === control) {
       setMessage("Correct — you identified the controlling switch.");
       saveSolved(riddleId);
     } else {
@@ -676,7 +687,21 @@ function SwitchesPuzzle({ riddleId }: { riddleId: number }) {
     }
   }
 
-  const bulbOn = switches[control];
+  const bulbOn = control !== null ? switches[control] : false;
+
+  function resetSwitches() {
+    setSwitches({1:false,2:false,3:false});
+    setHeat(0);
+    setEntered(false);
+    setTouched(false);
+    setGuess(null);
+    setMessage("");
+    if (!testControl) {
+      const values = new Uint32Array(1);
+      crypto.getRandomValues(values);
+      setControl(((values[0] % 3) + 1) as 1 | 2 | 3);
+    }
+  }
 
   return (
     <div className="puzzle-shell">
@@ -731,6 +756,7 @@ function SwitchesPuzzle({ riddleId }: { riddleId: number }) {
               <button className="action-button" onClick={submit} disabled={guess === null}>SUBMIT</button>
             </div>
             {message ? <div className={message.startsWith("Correct") ? "success-banner compact" : "error-banner"}>{message}</div> : null}
+            <button className="text-button" onClick={resetSwitches}>Reset puzzle</button>
           </div>
         )}
       </section>
@@ -738,13 +764,13 @@ function SwitchesPuzzle({ riddleId }: { riddleId: number }) {
   );
 }
 
-export default function PuzzleClient({ type, riddleId }: { type: PuzzleType; riddleId: number }) {
+export default function PuzzleClient({ type, riddleId, testHiddenCoin, testSwitchControl }: { type: PuzzleType; riddleId: number; testHiddenCoin?: HiddenCoin; testSwitchControl?: 1|2|3 }) {
   return (
     <>
       {type === "rope" ? <RopePuzzle riddleId={riddleId} /> : null}
-      {type === "coins" ? <CoinsPuzzle riddleId={riddleId} /> : null}
+      {type === "coins" ? <CoinsPuzzle riddleId={riddleId} testHidden={testHiddenCoin} /> : null}
       {type === "bridge" ? <BridgePuzzle riddleId={riddleId} /> : null}
-      {type === "switches" ? <SwitchesPuzzle riddleId={riddleId} /> : null}
+      {type === "switches" ? <SwitchesPuzzle riddleId={riddleId} testControl={testSwitchControl} /> : null}
       <div className="puzzle-footer"><Link href="/">← Back to today&apos;s riddle</Link><span>Progress saves on this device.</span></div>
     </>
   );
