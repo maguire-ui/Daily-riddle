@@ -1,10 +1,10 @@
 import Link from "next/link";
 import PuzzleClient from "./PuzzleClient";
 import SecondaryHeader from "../components/SecondaryHeader";
-import { getCurrentRiddle } from "../lib/riddles";
+import { getLiveRiddle } from "../lib/riddles";
 
 export default function VisualizePage() {
-  const riddle = getCurrentRiddle(new Date());
+  const riddle = getLiveRiddle(new Date());
 
   if (!riddle) {
     return <main className="shell"><div className="card empty"><h1>No active riddle.</h1><Link href="/">Back home</Link></div></main>;
