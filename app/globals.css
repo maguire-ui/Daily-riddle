@@ -1423,3 +1423,54 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
 .replay-switch>span i{transition:transform .85s cubic-bezier(.18,.82,.22,1),background .65s ease}
 .replay-door{transition:transform 1.05s cubic-bezier(.18,.82,.22,1),opacity .8s ease}
 .replay-bulb{transition:filter .75s ease,opacity .75s ease,text-shadow .75s ease}
+
+
+/* Museum lock test riddle */
+.museum-case{fill:#eadfce;stroke:#202735;stroke-width:2}
+.museum-glass{fill:#dff4f0;stroke:#8dbdb6;stroke-width:2}
+.museum-object{fill:none;stroke:#202735;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.keypad-shell{fill:#202735;stroke:#202735;stroke-width:2}
+.keypad-display{fill:#bfe9df;stroke:#0f6f65;stroke-width:2}
+.keypad-dot{fill:#fff9f1;stroke:#8e8171;stroke-width:1.5}
+.lock-latch{fill:none;stroke:#202735;stroke-width:8;stroke-linecap:round}
+
+.lock-stage{display:grid;gap:18px}
+.lock-clues{display:grid;gap:10px;padding-top:2px}
+.lock-clue{
+  display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center;
+  padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fffaf4
+}
+.lock-clue strong{
+  font-family:var(--font-heading);font-size:24px;letter-spacing:.08em;color:var(--coral-dark)
+}
+.lock-clue span{font-size:12px;line-height:1.45;color:var(--ink-2)}
+.lock-console{
+  width:min(100%,430px);margin:0 auto;padding:18px;border:1.5px solid var(--ink);
+  border-radius:24px;background:#202735;box-shadow:7px 8px 0 var(--shadow-dark)
+}
+.lock-display{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.lock-display span{
+  min-height:66px;display:grid;place-items:center;border:1.5px solid #78918d;border-radius:12px;
+  background:#ccebe5;color:#54706c;font-family:var(--font-heading);font-size:34px;font-weight:900;
+  transition:transform .25s cubic-bezier(.16,1,.3,1),background .2s,color .2s
+}
+.lock-display span.filled{background:#eafff9;color:#173934;transform:translateY(-2px)}
+.lock-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.lock-keypad button{
+  min-height:58px;border:1.5px solid #596271;border-radius:13px;background:#fffaf4;color:var(--ink);
+  font-family:var(--font-heading);font-size:19px;font-weight:900;box-shadow:0 3px 0 #0c1119;
+  transition:transform .16s ease,box-shadow .16s ease,background .16s ease
+}
+.lock-keypad button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #0c1119;background:#fff0da}
+.lock-keypad .keypad-utility{font-size:11px;letter-spacing:.05em;background:#eadfce}
+.lock-submit{width:100%;margin-top:14px}
+.lock-console .success-banner,.lock-console .error-banner{margin-top:12px}
+
+@media(max-width:520px){
+  .lock-clue{grid-template-columns:58px minmax(0,1fr);gap:10px;padding:10px 11px}
+  .lock-clue strong{font-size:20px}
+  .lock-clue span{font-size:11px}
+  .lock-console{padding:14px;border-radius:20px;box-shadow:5px 6px 0 var(--shadow-dark)}
+  .lock-display span{min-height:58px;font-size:30px}
+  .lock-keypad button{min-height:54px}
+}
