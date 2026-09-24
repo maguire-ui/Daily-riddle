@@ -1,6 +1,6 @@
 import Link from "next/link";
 import PuzzleClient from "./PuzzleClient";
-import SoundToggle from "../components/SoundToggle";
+import SecondaryHeader from "../components/SecondaryHeader";
 import { getCurrentRiddle } from "../lib/riddles";
 
 export default function VisualizePage() {
@@ -12,13 +12,7 @@ export default function VisualizePage() {
 
   return (
     <main className={`app shell shell-wide riddle-theme riddle-${riddle.id}`}>
-      <header className="site-header">
-        <Link className="wordmark" href="/">
-          <span className="wordmark-box">DR</span>
-          <span><strong>PUZZLE LAB</strong><small>INTERACTIVE MODE</small></span>
-        </Link>
-        <div className="lab-actions"><SoundToggle compact /><Link className="back-link" href="/">← Exit lab</Link></div>
-      </header>
+      <SecondaryHeader kicker="PUZZLE MODE" title={riddle.title} closeHref="/" closeLabel="Close puzzle mode" />
 
       <section className="lab-heading">
         <div>
