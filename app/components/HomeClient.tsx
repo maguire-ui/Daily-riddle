@@ -116,7 +116,7 @@ function PuzzleIllustration({ id }: { id: number }) {
       [310,190],
     ];
     return (
-      <svg className="puzzle-illustration simple-scene-illustration lock-illustration" viewBox="0 0 420 240" role="img" aria-label="A museum display lock with a three digit keypad">
+      <svg className="puzzle-illustration simple-scene-illustration lock-illustration" viewBox="0 0 420 240" role="img" aria-label="A black-glass vault with a four-digit keypad">
         <rect className="museum-case" x="28" y="38" width="190" height="164" rx="24"/>
         <rect className="museum-glass" x="48" y="58" width="150" height="124" rx="18"/>
         <path className="museum-object" d="M84 157h77M94 157l13-58h30l14 58M109 111h27M103 128h40"/>
