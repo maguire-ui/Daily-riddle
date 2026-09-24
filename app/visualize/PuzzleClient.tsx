@@ -643,12 +643,7 @@ function BridgePuzzle({ riddleId }: { riddleId: number }) {
 }
 
 function SwitchesPuzzle({ riddleId }: { riddleId: number }) {
-  const [control] = useState<1 | 2 | 3>(() => {
-    if (typeof crypto === "undefined") return 2;
-    const values = new Uint32Array(1);
-    crypto.getRandomValues(values);
-    return ((values[0] % 3) + 1) as 1 | 2 | 3;
-  });
+  const [control] = useState<1 | 2 | 3>(2);
   const [switches, setSwitches] = useState<Record<1 | 2 | 3, boolean>>({ 1:false, 2:false, 3:false });
   const [heat, setHeat] = useState(0);
   const [entered, setEntered] = useState(false);
