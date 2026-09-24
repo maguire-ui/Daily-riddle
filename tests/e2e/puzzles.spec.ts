@@ -192,7 +192,7 @@ test("solution reveal and archive pages load in the same visual system", async (
   await page.goto("/archive");
   await page.waitForLoadState("domcontentloaded");
   await expect(page.getByRole("heading", { name: "Past riddles", exact: true })).toBeVisible();
-  await expect(page.getByText(/No peeking ahead/i)).toBeVisible();
+  await expect(page.getByText(/Replay any of them whenever you want/i)).toBeVisible();
 });
 
 
@@ -209,8 +209,48 @@ test("yesterday solution offers an animated visual walkthrough", async ({ page }
   await expect(page.getByRole("heading", { name: "Start with 24 possibilities" })).toBeVisible();
 
   await page.getByRole("button", { name: /Play/ }).click();
-  await expect(page.getByRole("heading", { name: "Weigh 1–4 against 5–8" })).toBeVisible({ timeout: 3500 });
+  await expect(page.getByRole("heading", { name: "Weigh 1–4 against 5–8" })).toBeVisible({ timeout: 4500 });
+  await expect(page.locator(".replay-scale")).toHaveClass(/left-down/, { timeout: 6500 });
+});
+
+
+test("coin solution replay visibly moves coins before the scale settles", async ({ page }) => {
+  await page.goto("/yesterday/play");
+  await page.waitForLoadState("domcontentloaded");
+
+  const coinOne = page.locator(".moving-coin").filter({ hasText: /^1$/ });
+  const before = await coinOne.boundingBox();
+  expect(before).not.toBeNull();
+
+  await page.getByRole("button", { name: /Next/ }).click();
+  await expect(page.getByText("PLACING COINS…")).toBeVisible();
+
+  await page.waitForTimeout(350);
+  const during = await coinOne.boundingBox();
+  expect(during).not.toBeNull();
+
+  await page.waitForTimeout(1450);
+  const after = await coinOne.boundingBox();
+  expect(after).not.toBeNull();
+
+  expect(Math.abs((during?.x ?? 0) - (before?.x ?? 0))).toBeGreaterThan(2);
+  expect(Math.abs((after?.x ?? 0) - (during?.x ?? 0))).toBeGreaterThan(2);
   await expect(page.locator(".replay-scale")).toHaveClass(/left-down/);
+});
+
+test("archive entries open playable past riddles", async ({ page }) => {
+  await page.goto("/archive");
+  await page.waitForLoadState("domcontentloaded");
+
+  const replay = page.getByRole("link", { name: /Replay The Two Ropes/i });
+  await expect(replay).toBeVisible();
+  await replay.click();
+
+  await expect(page).toHaveURL(/\/riddle\/1$/);
+  await expect(page.getByRole("heading", { name: "The Two Ropes" })).toBeVisible();
+  await expect(page.getByText("Use the ropes — not a timer")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Close past riddle" })).toBeVisible();
+  await expect(page.getByText(/Back to today's riddle/i)).toHaveCount(0);
 });
 
 test("saved solve loads directly into the solved-today screen and can repeat", async ({ page }) => {
@@ -222,9 +262,22 @@ test("saved solve loads directly into the solved-today screen and can repeat", a
 
   await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
   await expect(page.getByText(/after 4 guesses/)).toBeVisible();
-  await expect(page.getByRole("button", { name: /Repeat riddle/i })).toBeVisible();
 
-  await page.getByRole("button", { name: /Repeat riddle/i }).click();
+  const linksBox = await page.locator(".solved-links").boundingBox();
+  const repeatButton = page.getByRole("button", { name: /Repeat riddle/i });
+  const repeatBox = await repeatButton.boundingBox();
+  const countdownBox = await page.locator(".next-riddle-countdown").boundingBox();
+  const viewport = page.viewportSize();
+
+  expect(linksBox).not.toBeNull();
+  expect(repeatBox).not.toBeNull();
+  expect(countdownBox).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect((repeatBox?.y ?? 0)).toBeGreaterThan((linksBox?.y ?? 0) + (linksBox?.height ?? 0));
+  expect((repeatBox?.y ?? 0) + (repeatBox?.height ?? 0)).toBeLessThan(countdownBox?.y ?? Infinity);
+  expect(Math.abs((repeatBox?.x ?? 0) + (repeatBox?.width ?? 0) / 2 - (viewport?.width ?? 0) / 2)).toBeLessThan(18);
+
+  await repeatButton.click();
   await expect(page.getByText("THE SETUP")).toBeVisible();
 });
 
