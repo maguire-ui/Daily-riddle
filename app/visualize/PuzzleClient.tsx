@@ -808,8 +808,8 @@ function LockPuzzle({ riddleId }: { riddleId: number }) {
   const [message, setMessage] = useState("");
 
   function pressDigit(digit: number) {
-    if (checking || code.length >= 3) return;
-    setCode((value) => `${value}${digit}`.slice(0, 3));
+    if (checking || code.length >= 4 || code.includes(String(digit))) return;
+    setCode((value) => `${value}${digit}`.slice(0, 4));
     setMessage("");
   }
 
@@ -826,7 +826,7 @@ function LockPuzzle({ riddleId }: { riddleId: number }) {
   }
 
   async function unlock() {
-    if (code.length !== 3 || checking) return;
+    if (code.length !== 4 || checking) return;
     setChecking(true);
     setMessage("");
 
@@ -851,16 +851,18 @@ function LockPuzzle({ riddleId }: { riddleId: number }) {
     }
   }
 
+  const digitUsed = (digit: number) => code.includes(String(digit));
+
   return (
     <div className="puzzle-shell">
       <div className="puzzle-hud">
         <div className="hud-stat">
           <span className="hud-icon"><StatusIcon kind="moves" /></span>
-          <span><small>CLUES</small><strong>3</strong></span>
+          <span><small>CLUES</small><strong>5</strong></span>
         </div>
         <div className="hud-stat">
           <span className="hud-icon"><StatusIcon kind="target" /></span>
-          <span><small>CODE</small><strong>3 DIGITS</strong></span>
+          <span><small>CODE</small><strong>4 DIGITS</strong></span>
         </div>
         <div className="hud-stat">
           <span className="hud-icon"><StatusIcon kind="time" /></span>
@@ -871,35 +873,44 @@ function LockPuzzle({ riddleId }: { riddleId: number }) {
       <section className="game-stage lock-stage">
         <div className="stage-head">
           <div>
-            <span className="stage-label">MUSEUM SECURITY</span>
-            <h2>Crack the display code</h2>
+            <span className="stage-label">BLACK GLASS VAULT</span>
+            <h2>Crack the vault code</h2>
           </div>
           <span className="live-pill active"><i /> {checking ? "CHECKING" : "LOCKED"}</span>
         </div>
 
         <div className="lock-clues" aria-label="Code clues">
-          <div className="lock-clue"><strong>013</strong><span>None of these digits are in the code.</span></div>
-          <div className="lock-clue"><strong>052</strong><span>Exactly two digits are correct, but both are in the wrong positions.</span></div>
-          <div className="lock-clue"><strong>017</strong><span>Exactly one digit is correct and in the correct position.</span></div>
+          <div className="lock-clue"><strong>2589</strong><span>Three digits are in the code. All three are in the wrong positions.</span></div>
+          <div className="lock-clue"><strong>9452</strong><span>Two digits are in the code. Both are in the wrong positions.</span></div>
+          <div className="lock-clue"><strong>9458</strong><span>Two digits are in the code. One is correctly placed; the other is misplaced.</span></div>
+          <div className="lock-clue"><strong>6517</strong><span>Two digits are in the code. Both are in the wrong positions.</span></div>
+          <div className="lock-clue"><strong>0748</strong><span>Two digits are in the code. Both are in the correct positions.</span></div>
         </div>
 
         <div className="lock-console">
-          <div className="lock-display" aria-label="Entered code">
-            {[0,1,2].map((index) => (
+          <div className="lock-display lock-display-four" aria-label="Entered code">
+            {[0,1,2,3].map((index) => (
               <span key={index} className={code[index] ? "filled" : ""}>{code[index] ?? "·"}</span>
             ))}
           </div>
 
-          <div className="lock-keypad" aria-label="Museum keypad">
+          <div className="lock-keypad" aria-label="Vault keypad">
             {[1,2,3,4,5,6,7,8,9].map((digit) => (
-              <button key={digit} type="button" onClick={() => pressDigit(digit)} disabled={checking || code.length >= 3}>{digit}</button>
+              <button
+                key={digit}
+                type="button"
+                onClick={() => pressDigit(digit)}
+                disabled={checking || code.length >= 4 || digitUsed(digit)}
+              >
+                {digit}
+              </button>
             ))}
             <button className="keypad-utility" type="button" onClick={clear} disabled={checking || code.length === 0}>CLR</button>
-            <button type="button" onClick={() => pressDigit(0)} disabled={checking || code.length >= 3}>0</button>
+            <button type="button" onClick={() => pressDigit(0)} disabled={checking || code.length >= 4 || digitUsed(0)}>0</button>
             <button className="keypad-utility" type="button" onClick={erase} disabled={checking || code.length === 0}>⌫</button>
           </div>
 
-          <button className="action-button lock-submit" type="button" onClick={unlock} disabled={checking || code.length !== 3}>
+          <button className="action-button lock-submit" type="button" onClick={unlock} disabled={checking || code.length !== 4}>
             {checking ? "CHECKING…" : "TRY CODE"}
           </button>
 
