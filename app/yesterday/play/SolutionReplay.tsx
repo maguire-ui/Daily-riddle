@@ -40,7 +40,7 @@ const COPY: Record<ReplayType, ReplayStep[]> = {
   ],
 };
 
-function CoinReplay({ step }: { step: number }) {
+function CoinReplay({ step, settled }: { step: number; settled: boolean }) {
   const states = [
     { left: [] as number[], right: [] as number[], outcome: "READY", final: false },
     { left: [1,2,3,4], right: [5,6,7,8], outcome: "LEFT HEAVIER", final: false },
@@ -49,24 +49,98 @@ function CoinReplay({ step }: { step: number }) {
     { left: [1], right: [2], outcome: "COIN 6 IS LIGHT", final: true },
   ];
   const state = states[Math.min(step, states.length - 1)];
-  const onScale = new Set([...state.left, ...state.right]);
-  const bench = Array.from({length:12},(_,i)=>i+1).filter(n=>!onScale.has(n));
+
+  function destination(coin: number) {
+    const leftIndex = state.left.indexOf(coin);
+    const rightIndex = state.right.indexOf(coin);
+    const tilt = settled && state.outcome === "LEFT HEAVIER" ? 3.3 : settled && state.outcome === "RIGHT HEAVIER" ? -3.3 : 0;
+
+    if (leftIndex >= 0) {
+      const columns = state.left.length > 2 ? 2 : state.left.length;
+      const row = Math.floor(leftIndex / Math.max(1, columns));
+      const col = leftIndex % Math.max(1, columns);
+      return {
+        left: state.left.length === 1 ? "27%" : `${22 + col * 10}%`,
+        top: `${40 + row * 13 + tilt}%`,
+      };
+    }
+
+    if (rightIndex >= 0) {
+      const columns = state.right.length > 2 ? 2 : state.right.length;
+      const row = Math.floor(rightIndex / Math.max(1, columns));
+      const col = rightIndex % Math.max(1, columns);
+      return {
+        left: state.right.length === 1 ? "73%" : `${68 + col * 10}%`,
+        top: `${40 + row * 13 - tilt}%`,
+      };
+    }
+
+    const benchIndex = Array.from({ length: 12 }, (_, index) => index + 1)
+      .filter((value) => !state.left.includes(value) && !state.right.includes(value))
+      .indexOf(coin);
+    const benchCount = 12 - state.left.length - state.right.length;
+    const perRow = Math.min(6, Math.max(1, benchCount));
+    const row = Math.floor(benchIndex / perRow);
+    const col = benchIndex % perRow;
+    const rowCount = Math.min(perRow, benchCount - row * perRow);
+    const spacing = rowCount <= 1 ? 0 : Math.min(15, 74 / (rowCount - 1));
+    const startX = 50 - ((rowCount - 1) * spacing) / 2;
+
+    return {
+      left: `${startX + col * spacing}%`,
+      top: `${79 + row * 13}%`,
+    };
+  }
+
+  const status = !settled && state.final
+    ? "CHECKING RESULT…"
+    : !settled && (state.left.length > 0 || state.right.length > 0)
+      ? "PLACING COINS…"
+      : state.outcome;
+
+  const tiltClass = settled
+    ? state.outcome === "LEFT HEAVIER"
+      ? "left-down"
+      : state.outcome === "RIGHT HEAVIER"
+        ? "right-down"
+        : ""
+    : "";
 
   return (
     <div className="solution-replay-scene coin-replay-scene">
-      <div className="replay-scale-status">{state.outcome}</div>
-      <div className={`replay-scale ${state.outcome === "LEFT HEAVIER" ? "left-down" : state.outcome === "RIGHT HEAVIER" ? "right-down" : ""}`}>
-        <div className="replay-scale-post"/>
-        <div className="replay-scale-beam"><i/></div>
-        <div className="replay-pans">
-          <div className="replay-pan"><span>LEFT</span><div>{state.left.map(n=><b key={n} className="replay-coin">{n}</b>)}</div></div>
-          <div className="replay-pan"><span>RIGHT</span><div>{state.right.map(n=><b key={n} className="replay-coin">{n}</b>)}</div></div>
+      <div key={`${step}-${settled ? "settled" : "moving"}`} className="replay-scale-status">{status}</div>
+
+      <div className="replay-scale-area">
+        <div className={`replay-scale ${tiltClass}`}>
+          <div className="replay-scale-post"/>
+          <div className="replay-scale-beam"><i/></div>
+          <div className="replay-pans">
+            <div className="replay-pan"><span>LEFT</span></div>
+            <div className="replay-pan"><span>RIGHT</span></div>
+          </div>
+        </div>
+
+        <div className="replay-coin-motion-layer" aria-label="Coins moving between the bench and balance scale">
+          {Array.from({ length: 12 }, (_, index) => index + 1).map((coin) => {
+            const place = destination(coin);
+            return (
+              <b
+                key={coin}
+                className={`replay-coin moving-coin ${state.final && settled && coin === 6 ? "identified" : ""}`}
+                style={{
+                  left: place.left,
+                  top: place.top,
+                  transitionDelay: `${(coin - 1) * 45}ms`,
+                }}
+              >
+                {coin}
+              </b>
+            );
+          })}
         </div>
       </div>
-      <div className="replay-coin-bench">
-        {bench.map(n=><span key={n} className={`replay-coin ${state.final && n === 6 ? "identified" : ""}`}>{n}</span>)}
-      </div>
-      {state.final ? <div className="replay-diagnosis">✓ Coin 6 is the lighter counterfeit</div> : null}
+
+      {state.final && settled ? <div className="replay-diagnosis">✓ Coin 6 is the lighter counterfeit</div> : <div className="replay-diagnosis-spacer"/>}
       <small className="branch-note">Example branch shown: Coin 6 is lighter. Other outcomes follow the same decision-tree idea.</small>
     </div>
   );
@@ -148,6 +222,13 @@ export default function SolutionReplay({ type, title }: { type: ReplayType; titl
   const steps = COPY[type];
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [settled, setSettled] = useState(false);
+
+  useEffect(() => {
+    setSettled(false);
+    const timer = window.setTimeout(() => setSettled(true), type === "coins" ? 1750 : 900);
+    return () => window.clearTimeout(timer);
+  }, [step, type]);
 
   useEffect(() => {
     if (!playing) return;
@@ -155,9 +236,10 @@ export default function SolutionReplay({ type, title }: { type: ReplayType; titl
       setPlaying(false);
       return;
     }
-    const timer = window.setTimeout(() => setStep(value => Math.min(steps.length - 1, value + 1)), 2200);
+    const delay = type === "coins" ? (step === 0 ? 3000 : 5200) : 4200;
+    const timer = window.setTimeout(() => setStep(value => Math.min(steps.length - 1, value + 1)), delay);
     return () => window.clearTimeout(timer);
-  }, [playing, step, steps.length]);
+  }, [playing, step, steps.length, type]);
 
   const progress = useMemo(() => ((step + 1) / steps.length) * 100, [step, steps.length]);
 
@@ -181,13 +263,15 @@ export default function SolutionReplay({ type, title }: { type: ReplayType; titl
 
       <div className="solution-player-shell">
         <section className="solution-player-copy">
-          <span className="tiny-kicker">STEP {step + 1} OF {steps.length}</span>
-          <h1>{steps[step].title}</h1>
-          <p>{steps[step].text}</p>
+          <div key={step} className="solution-step-copy-motion">
+            <span className="tiny-kicker">STEP {step + 1} OF {steps.length}</span>
+            <h1>{steps[step].title}</h1>
+            <p>{steps[step].text}</p>
+          </div>
         </section>
 
         <section className="solution-player-canvas" aria-live="polite">
-          {type === "coins" ? <CoinReplay step={step}/> : null}
+          {type === "coins" ? <CoinReplay step={step} settled={settled}/> : null}
           {type === "bridge" ? <BridgeReplay step={step}/> : null}
           {type === "rope" ? <RopeReplay step={step}/> : null}
           {type === "switches" ? <SwitchReplay step={step}/> : null}
