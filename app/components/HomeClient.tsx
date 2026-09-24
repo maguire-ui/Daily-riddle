@@ -33,17 +33,17 @@ function PuzzleIllustration({ id }: { id: number }) {
         <path className="bank-shape right" d="M292 132h116v82H264z"/>
 
         <g className="bridge-object">
-          <path className="bridge-rope" d="M132 112c38-30 124-30 162 0"/>
-          <path className="bridge-rope" d="M132 121c38-25 124-25 162 0"/>
-          <path className="bridge-deck" d="M134 145h158"/>
-          {[145,165,185,205,225,245,265,285].map((x) => (
+          <path className="bridge-rope" d="M146 112c35-30 111-30 146 0"/>
+          <path className="bridge-rope" d="M146 121c35-25 111-25 146 0"/>
+          <path className="bridge-deck" d="M148 145h144"/>
+          {[158,176,194,212,230,248,266,284].map((x) => (
             <path key={x} className="bridge-plank" d={`M${x} 139l8 17`} />
           ))}
-          <path className="bridge-post" d="M134 106v51M292 106v51"/>
+          <path className="bridge-post" d="M148 106v51M292 106v51"/>
         </g>
 
         <g className="traveler-group simple-travelers">
-          {[48,76,104,132].map((x) => (
+          {[38,64,90,116].map((x) => (
             <g key={x} transform={`translate(${x} 0)`}>
               <circle className="traveler-head" cx="0" cy="116" r="7"/>
               <path className="traveler-body" d="M0 124v24m-9-12 9-7 9 7M0 148l-8 13M0 148l8 13"/>
