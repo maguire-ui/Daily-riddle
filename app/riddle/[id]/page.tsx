@@ -40,7 +40,7 @@ export default async function PastRiddlePage({
         </section>
 
         <section className="past-riddle-game">
-          <PuzzleClient type={riddle.visualizer} riddleId={riddle.id} />
+          <PuzzleClient type={riddle.visualizer} riddleId={riddle.id} embedded />
         </section>
       </div>
     </main>
