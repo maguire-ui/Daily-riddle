@@ -1486,3 +1486,10 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
   background:#FFF0EC;
   color:var(--red);
 }
+
+
+/* Four-digit Black Glass Vault */
+.lock-display-four{grid-template-columns:repeat(4,1fr)}
+@media(max-width:520px){
+  .lock-display-four span{min-width:0}
+}
