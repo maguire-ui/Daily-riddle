@@ -127,7 +127,6 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
       const detail = (event as CustomEvent<{ riddleId: number }>).detail;
       if (detail?.riddleId === riddle.id) {
         setSolved(true);
-        playUiSound("success");
       }
     };
     window.addEventListener("daily-riddle-solved", onSolved);
