@@ -101,31 +101,28 @@ for (const control of [1, 2, 3] as const) {
   });
 }
 
-test("typed bridge answer rejects only-the-number and accepts the actual method", async ({ page }) => {
+test("live museum-lock riddle rejects a wrong code and accepts the unique code", async ({ page }) => {
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
 
+  await expect(page.getByRole("heading", { name: "The Museum Lock" })).toBeVisible();
+  await expect(page.getByText(/013 — none of these digits/i)).toBeVisible();
+
   const input = page.getByLabel("Your solution");
-  await input.fill("17");
+  await input.fill("257");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
   await expect(page.getByText(/Not quite/)).toBeVisible();
 
-  await input.fill(`What you would want to do is:
-
-1. Take the 1 and the 2 down.
-2. Bring the 1 back.
-3. Bring the 7 and the 10 down.
-4. Take the 2 back.
-5. Move the 1 and the 2 down to get exactly 17 minutes.`);
+  await input.fill("The code is 527.");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
 
   await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
+  await expect(page.getByText("The Museum Lock")).toBeVisible();
   await expect(page.getByText("Next riddle arrives in")).toBeVisible();
   await expect(page.locator(".next-riddle-countdown strong")).toHaveText(/\d{2}:\d{2}:\d{2}/);
 
   await page.getByRole("button", { name: /Repeat riddle/i }).click();
-  await expect(page.getByRole("heading", { name: "The Bridge at Night" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Try the interactive puzzle/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The Museum Lock" })).toBeVisible();
 });
 
 
@@ -137,13 +134,31 @@ test("home opens the interactive puzzle in-place and returns without navigation"
   await page.getByRole("button", { name: /Try the interactive puzzle/i }).click();
   const dialog = page.getByRole("dialog", { name: /Interactive puzzle/i });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText("Get everyone across")).toBeVisible();
+  await expect(dialog.getByText("Crack the display code")).toBeVisible();
   expect(page.url()).toBe(before);
 
   await page.getByRole("button", { name: "Close interactive puzzle" }).click();
   await expect(dialog).toHaveCount(0);
   expect(page.url()).toBe(before);
 });
+
+test("interactive museum keypad solves with the correct three-digit code", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
+  await page.getByRole("button", { name: /Try the interactive puzzle/i }).click();
+  const dialog = page.getByRole("dialog", { name: /Interactive puzzle/i });
+
+  for (const digit of ["5", "2", "7"]) {
+    await dialog.getByRole("button", { name: digit, exact: true }).click();
+  }
+  await dialog.getByRole("button", { name: "TRY CODE" }).click();
+
+  await expect(dialog.getByText(/Unlocked — that is the correct code/i)).toBeVisible();
+  await expect(dialog).toHaveCount(0, { timeout: 3000 });
+  await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
+});
+
 
 test("sound preference is remembered locally", async ({ page }) => {
   await page.goto("/");
@@ -255,7 +270,7 @@ test("archive entries open playable past riddles", async ({ page }) => {
 
 test("saved solve loads directly into the solved-today screen and can repeat", async ({ page }) => {
   await page.addInitScript(() => {
-    window.localStorage.setItem("daily-riddle-3", JSON.stringify({ solved: true, guesses: 4 }));
+    window.localStorage.setItem("daily-riddle-5", JSON.stringify({ solved: true, guesses: 4 }));
   });
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
@@ -284,7 +299,7 @@ test("saved solve loads directly into the solved-today screen and can repeat", a
 test("solved screen stays inside a narrow phone viewport", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.addInitScript(() => {
-    window.localStorage.setItem("daily-riddle-3", JSON.stringify({ solved: true, guesses: 2 }));
+    window.localStorage.setItem("daily-riddle-5", JSON.stringify({ solved: true, guesses: 2 }));
   });
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
@@ -293,6 +308,15 @@ test("solved screen stays inside a narrow phone viewport", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(1);
   await expect(page.locator(".next-riddle-countdown strong")).toBeVisible();
   await expect(page.getByRole("button", { name: /Repeat riddle/i })).toBeVisible();
+});
+
+
+test("temporary test riddle keeps the normal midnight countdown", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
+  await expect(page.getByText("NEXT PUZZLE", { exact: true })).toBeVisible();
+  await expect(page.locator(".drop-clock strong")).toHaveText(/\d{2}:\d{2}:\d{2}/);
 });
 
 
