@@ -538,9 +538,13 @@ function BridgePuzzle({ riddleId }: { riddleId: number }) {
   const [elapsed, setElapsed] = useState(0);
   const [moves, setMoves] = useState<string[]>([]);
   const [moving, setMoving] = useState(false);
+  const [movingPeople, setMovingPeople] = useState<BridgePerson[]>([]);
+  const [movingFrom, setMovingFrom] = useState<"left" | "right">("left");
+  const [movingCost, setMovingCost] = useState(0);
   const [message, setMessage] = useState("");
 
   const activeSide = flashlight === "left" ? left : right;
+  const crossingDuration = 1450;
 
   function togglePerson(person: BridgePerson) {
     if (moving || !activeSide.includes(person)) return;
@@ -549,29 +553,35 @@ function BridgePuzzle({ riddleId }: { riddleId: number }) {
 
   function cross() {
     if (moving || selected.length < 1 || selected.length > 2) return;
-    const cost = Math.max(...selected);
+    const travelers = [...selected] as BridgePerson[];
+    const cost = Math.max(...travelers);
     const origin = flashlight;
     const destination = origin === "left" ? "right" : "left";
+
     setMoving(true);
+    setMovingPeople(travelers);
+    setMovingFrom(origin);
+    setMovingCost(cost);
     setMessage("");
 
     window.setTimeout(() => {
       if (origin === "left") {
-        setLeft((items) => items.filter((person) => !selected.includes(person)));
-        setRight((items) => [...items, ...selected].sort((a, b) => a - b) as BridgePerson[]);
+        setLeft((items) => items.filter((person) => !travelers.includes(person)));
+        setRight((items) => [...items, ...travelers].sort((a, b) => a - b) as BridgePerson[]);
       } else {
-        setRight((items) => items.filter((person) => !selected.includes(person)));
-        setLeft((items) => [...items, ...selected].sort((a, b) => a - b) as BridgePerson[]);
+        setRight((items) => items.filter((person) => !travelers.includes(person)));
+        setLeft((items) => [...items, ...travelers].sort((a, b) => a - b) as BridgePerson[]);
       }
 
       const nextElapsed = elapsed + cost;
       setElapsed(nextElapsed);
-      setMoves((items) => [...items, `${selected.join(" & ")} crossed ${origin === "left" ? "→" : "←"} · +${cost} min`]);
+      setMoves((items) => [...items, `${travelers.join(" & ")} crossed ${origin === "left" ? "→" : "←"} · +${cost} min`]);
       setFlashlight(destination);
       setSelected([]);
+      setMovingPeople([]);
       setMoving(false);
 
-      const everyoneAcross = origin === "left" && left.length === selected.length;
+      const everyoneAcross = origin === "left" && left.length === travelers.length;
       if (everyoneAcross) {
         if (nextElapsed === 17) {
           setMessage("Perfect — everyone crossed in exactly 17 minutes.");
@@ -580,7 +590,7 @@ function BridgePuzzle({ riddleId }: { riddleId: number }) {
           setMessage(`Everyone crossed in ${nextElapsed} minutes. The target is exactly 17.`);
         }
       }
-    }, 650);
+    }, crossingDuration);
   }
 
   function reset() {
@@ -591,8 +601,21 @@ function BridgePuzzle({ riddleId }: { riddleId: number }) {
     setElapsed(0);
     setMoves([]);
     setMoving(false);
+    setMovingPeople([]);
+    setMovingCost(0);
     setMessage("");
   }
+
+  const chip = (person: BridgePerson, side: "left" | "right") => (
+    <button
+      key={person}
+      className={`person-chip ${selected.includes(person) ? "selected" : ""} ${moving && movingFrom === side && movingPeople.includes(person) ? "departing" : ""}`}
+      onClick={() => togglePerson(person)}
+      disabled={flashlight !== side || moving}
+    >
+      <strong>{person}</strong><small>MIN</small>
+    </button>
+  );
 
   return (
     <div className="puzzle-shell">
@@ -605,36 +628,47 @@ function BridgePuzzle({ riddleId }: { riddleId: number }) {
       <section className="game-stage bridge-stage">
         <div className="stage-head">
           <div><span className="stage-label">NIGHT CROSSING</span><h2>Get everyone across</h2></div>
-          <span className={`live-pill ${moving ? "active" : ""}`}><i /> {moving ? "CROSSING" : "READY"}</span>
+          <span className={`live-pill ${moving ? "active" : ""}`}><i /> {moving ? `CROSSING · +${movingCost} MIN` : "READY"}</span>
         </div>
 
-        <div className="bridge-scene">
-          <div className="night-sky"><span className="moon" /><i className="star one" /><i className="star two" /><i className="star three" /></div>
+        <div className="bridge-scene bridge-scene-polished">
+          <div className="night-sky">
+            <span className="moon" /><i className="star one" /><i className="star two" /><i className="star three" />
+            <span className="distant-hill hill-one"/><span className="distant-hill hill-two"/>
+          </div>
+          <div className="river-reflection" aria-hidden="true"/>
           <div className="bridge-side left-bank">
             <span className="bank-label">START</span>
-            <div className="people-stack">
-              {left.map((person) => <button key={person} className={`person-chip ${selected.includes(person) ? "selected" : ""}`} onClick={() => togglePerson(person)} disabled={flashlight !== "left" || moving}><strong>{person}</strong><small>MIN</small></button>)}
-            </div>
+            <div className="people-stack">{left.map((person) => chip(person, "left"))}</div>
           </div>
           <div className="bridge-span">
+            <div className="bridge-cables" aria-hidden="true"><i/><i/></div>
             <div className="bridge-rails" />
-            <div className={`flashlight ${flashlight} ${moving ? "moving" : ""}`}><span /></div>
+            <div className={`flashlight ${moving ? `traveling ${movingFrom}-to-${movingFrom === "left" ? "right" : "left"}` : flashlight}`}><span /></div>
+            {moving ? (
+              <div className={`bridge-walkers ${movingFrom}-to-${movingFrom === "left" ? "right" : "left"}`}>
+                {movingPeople.map((person, index) => (
+                  <span className="walking-person" key={person} style={{"--walker-index": index} as CSSProperties}>
+                    <b>{person}</b><small>min</small><i/>
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="bridge-side right-bank">
             <span className="bank-label">FINISH</span>
-            <div className="people-stack">
-              {right.map((person) => <button key={person} className={`person-chip ${selected.includes(person) ? "selected" : ""}`} onClick={() => togglePerson(person)} disabled={flashlight !== "right" || moving}><strong>{person}</strong><small>MIN</small></button>)}
-            </div>
+            <div className="people-stack">{right.map((person) => chip(person, "right"))}</div>
           </div>
+          {moving ? <div className="crossing-progress" aria-hidden="true"><i/></div> : null}
         </div>
 
         <div className="bridge-instruction">
           <span>FLASHLIGHT: {flashlight.toUpperCase()} BANK</span>
-          <strong>{selected.length === 0 ? "Select one or two travelers" : `Selected: ${selected.join(" + ")} · Move costs ${Math.max(...selected)} min`}</strong>
+          <strong>{moving ? `${movingPeople.join(" + ")} are crossing…` : selected.length === 0 ? "Select one or two travelers" : `Selected: ${selected.join(" + ")} · Move costs ${Math.max(...selected)} min`}</strong>
         </div>
 
         <div className="control-dock">
-          <button className="control-button" onClick={reset}>Reset</button>
+          <button className="control-button" onClick={reset} disabled={moving}>Reset</button>
           <button className="action-button" onClick={cross} disabled={moving || selected.length === 0}>{moving ? "CROSSING…" : flashlight === "left" ? "CROSS →" : "← RETURN"}</button>
         </div>
 
