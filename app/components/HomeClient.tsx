@@ -11,6 +11,10 @@ type PublicRiddle = {
   question: string;
 };
 
+function ArrowIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M14 7l5 5-5 5"/></svg>;
+}
+
 export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle; unlockAt: string }) {
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<null | boolean>(null);
@@ -21,9 +25,11 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
   const storageKey = useMemo(() => `daily-riddle-${riddle.id}`, [riddle.id]);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
-    setGuessCount(Number(saved.guesses || 0));
-    setSolved(Boolean(saved.solved));
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      setGuessCount(Number(saved.guesses || 0));
+      setSolved(Boolean(saved.solved));
+    } catch {}
   }, [storageKey]);
 
   useEffect(() => {
@@ -32,75 +38,120 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
       const h = Math.floor(ms / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
       const s = Math.floor((ms % 60000) / 1000);
-      setRemaining(`${String(h).padStart(2,"0")} : ${String(m).padStart(2,"0")} : ${String(s).padStart(2,"0")}`);
+      setRemaining(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
       if (ms === 0) window.location.reload();
     };
     tick();
     const timer = window.setInterval(tick, 1000);
-    return () => clearInterval(timer);
+    return () => window.clearInterval(timer);
   }, [unlockAt]);
 
-  async function submit(e: FormEvent) {
-    e.preventDefault();
+  async function submit(event: FormEvent) {
+    event.preventDefault();
     if (!answer.trim()) return;
+
     const next = guessCount + 1;
     setGuessCount(next);
-    const res = await fetch("/api/answer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answer }) });
-    const data = await res.json();
-    const ok = Boolean(data.correct);
-    setResult(ok);
-    if (ok) setSolved(true);
-    localStorage.setItem(storageKey, JSON.stringify({ guesses: next, solved: ok || solved }));
+    const response = await fetch("/api/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ answer }),
+    });
+    const data = await response.json();
+    const correct = Boolean(data.correct);
+    setResult(correct);
+    if (correct) setSolved(true);
+
+    localStorage.setItem(storageKey, JSON.stringify({ guesses: next, solved: correct || solved }));
   }
 
   return (
     <main className="app shell">
-      <header className="topbar">
-        <div className="brand">Daily Riddle</div>
-        <nav className="nav">
-          <Link className="nav-button" href="/archive">Archive</Link>
+      <header className="site-header">
+        <Link className="wordmark" href="/">
+          <span className="wordmark-box">DR</span>
+          <span><strong>DAILY RIDDLE</strong><small>ONE PROBLEM. EVERY DAY.</small></span>
+        </Link>
+        <nav className="site-nav">
+          <span className="server-status"><i /> LIVE</span>
+          <Link href="/archive">Archive</Link>
         </nav>
       </header>
 
-      <section className="hero">
-        <div className="kicker">Today&apos;s riddle · #{riddle.id}</div>
-        <h1>{riddle.title}</h1>
-        <div className="meta">
-          <span className="chip">{riddle.category}</span>
-          <span className="chip">{riddle.difficulty}</span>
-          {solved && <span className="chip">Solved on this device</span>}
+      <section className="challenge-head">
+        <div className="challenge-index">
+          <span>DAILY CHALLENGE</span>
+          <strong>#{String(riddle.id).padStart(3, "0")}</strong>
+        </div>
+
+        <div className="challenge-title">
+          <div className="meta-line">
+            <span>{riddle.category}</span>
+            <i />
+            <span>{riddle.difficulty}</span>
+            {solved ? <><i /><span className="solved-label">SOLVED</span></> : null}
+          </div>
+          <h1>{riddle.title}</h1>
+        </div>
+
+        <div className="countdown-panel">
+          <small>NEXT DROP</small>
+          <strong>{remaining || "--:--:--"}</strong>
+          <span>America / Edmonton</span>
         </div>
       </section>
 
-      <section className="card">
-        <p className="question">{riddle.question}</p>
+      <section className="riddle-panel">
+        <div className="panel-rule">
+          <span>THE PROBLEM</span>
+          <span>NO HINTS · UNLIMITED GUESSES</span>
+        </div>
 
-        <form className="answer-wrap" onSubmit={submit}>
-          <input
-            className="answer-input"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            placeholder="Type your solution..."
-            aria-label="Your answer"
-            autoComplete="off"
-          />
-          <button className="primary" type="submit">CHECK ANSWER</button>
-          <div aria-live="polite">
-            {result === true && <div className="result good">Correct! You solved it.</div>}
-            {result === false && <div className="result bad">Incorrect — try again.</div>}
+        <p className="riddle-question">{riddle.question}</p>
+
+        <div className="play-callout">
+          <div className="play-copy">
+            <span className="play-number">01</span>
+            <div><strong>Want to work it out visually?</strong><small>Open the interactive version and solve it by doing.</small></div>
           </div>
-          <div className="subtle">Guesses on this device: {guessCount}. Different wording counts if the core method is correct.</div>
+          <Link className="play-button" href="/visualize">OPEN PUZZLE <ArrowIcon /></Link>
+        </div>
+
+        <form className="answer-console" onSubmit={submit}>
+          <div className="answer-console-head">
+            <div><span>YOUR SOLUTION</span><small>Explain the method, not just the final number.</small></div>
+            <span className="guess-counter">{String(guessCount).padStart(2, "0")} GUESSES</span>
+          </div>
+          <div className="answer-row">
+            <input
+              value={answer}
+              onChange={(event) => setAnswer(event.target.value)}
+              placeholder="Describe how you would solve it…"
+              aria-label="Your solution"
+              autoComplete="off"
+            />
+            <button type="submit">CHECK ANSWER</button>
+          </div>
+          <div aria-live="polite">
+            {result === true ? <div className="answer-result good"><span>✓</span><div><strong>Correct.</strong><small>Your method matches the solution.</small></div></div> : null}
+            {result === false ? <div className="answer-result bad"><span>×</span><div><strong>Not quite.</strong><small>Keep the same idea and try another approach.</small></div></div> : null}
+          </div>
         </form>
+      </section>
 
-        <div className="actions">
-          <Link className="ghost" href="/visualize">Visualize / Interactive Puzzle</Link>
-          <Link className="ghost" href="/yesterday">Yesterday&apos;s Answer</Link>
-        </div>
-
-        <div className="countdown">
-          <div className="countdown-label">Next riddle / answer unlocks in</div>
-          <div className="countdown-time">{remaining || "-- : -- : --"}</div>
-        </div>
+      <section className="secondary-grid">
+        <Link className="secondary-card" href="/yesterday">
+          <span>YESTERDAY</span>
+          <strong>Reveal the previous solution</strong>
+          <small>Unlocks only after the daily reset.</small>
+          <b>→</b>
+        </Link>
+        <Link className="secondary-card" href="/archive">
+          <span>ARCHIVE</span>
+          <strong>Past daily challenges</strong>
+          <small>Only riddles that have already been published.</small>
+          <b>→</b>
+        </Link>
       </section>
     </main>
   );
