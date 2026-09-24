@@ -191,7 +191,7 @@ test("solution reveal and archive pages load in the same visual system", async (
 
   await page.goto("/archive");
   await page.waitForLoadState("domcontentloaded");
-  await expect(page.getByText("Past riddles", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Past riddles", exact: true })).toBeVisible();
   await expect(page.getByText(/No peeking ahead/i)).toBeVisible();
 });
 
