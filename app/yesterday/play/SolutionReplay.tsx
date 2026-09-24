@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import SoundToggle, { playUiSound } from "../../components/SoundToggle";
+import { playUiSound } from "../../components/SoundToggle";
+import SecondaryHeader from "../../components/SecondaryHeader";
 
 type ReplayType = "rope" | "coins" | "bridge" | "switches";
 
@@ -175,11 +175,9 @@ export default function SolutionReplay({ type, title }: { type: ReplayType; titl
 
   return (
     <main className="solution-player-page">
-      <header className="solution-player-bar">
-        <Link href="/yesterday" className="solution-player-back">← Solution</Link>
-        <div><span>VISUAL WALKTHROUGH</span><strong>{title}</strong></div>
-        <SoundToggle compact />
-      </header>
+      <div className="solution-player-header-wrap">
+        <SecondaryHeader kicker="VISUAL WALKTHROUGH" title={title} closeHref="/yesterday" closeLabel="Close solution animation" />
+      </div>
 
       <div className="solution-player-shell">
         <section className="solution-player-copy">
