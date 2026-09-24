@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PuzzleClient from "./PuzzleClient";
+import SoundToggle from "../components/SoundToggle";
 import { getCurrentRiddle } from "../lib/riddles";
 
 export default function VisualizePage() {
@@ -16,7 +17,7 @@ export default function VisualizePage() {
           <span className="wordmark-box">DR</span>
           <span><strong>PUZZLE LAB</strong><small>INTERACTIVE MODE</small></span>
         </Link>
-        <Link className="back-link" href="/">← Exit lab</Link>
+        <div className="lab-actions"><SoundToggle compact /><Link className="back-link" href="/">← Exit lab</Link></div>
       </header>
 
       <section className="lab-heading">
