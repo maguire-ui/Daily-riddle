@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import PuzzleClient from "../../../visualize/PuzzleClient";
+import PuzzleClient from "../../visualize/PuzzleClient";
 
 const TYPES = ["rope", "coins", "bridge", "switches"] as const;
 type PuzzleType = (typeof TYPES)[number];
