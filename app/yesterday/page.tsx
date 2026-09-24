@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getPreviousRiddle } from "../lib/riddles";
-import SoundToggle from "../components/SoundToggle";
+import SecondaryHeader from "../components/SecondaryHeader";
 
 export default function YesterdayPage() {
   const r = getPreviousRiddle(new Date());
@@ -9,15 +9,11 @@ export default function YesterdayPage() {
     return (
       <main className="journal-page">
         <div className="journal-shell">
-          <header className="journal-topbar">
-            <Link href="/" className="journal-brand">Daily Riddle</Link>
-            <SoundToggle compact />
-          </header>
+          <SecondaryHeader kicker="YESTERDAY'S SOLUTION" title="Daily Riddle" closeHref="/" closeLabel="Close solution" />
           <section className="no-reveal">
             <span>?</span>
             <h1>No unlocked answer yet.</h1>
             <p>Yesterday&apos;s solution appears here only after the daily rollover.</p>
-            <Link className="ghost" href="/">Back to today</Link>
           </section>
         </div>
       </main>
@@ -27,10 +23,7 @@ export default function YesterdayPage() {
   return (
     <main className="journal-page solution-page">
       <div className="journal-shell">
-        <header className="journal-topbar">
-          <Link href="/" className="journal-brand">Daily Riddle</Link>
-          <div className="topbar-actions"><SoundToggle compact /><Link className="ghost mini" href="/">Today</Link></div>
-        </header>
+        <SecondaryHeader kicker="YESTERDAY'S SOLUTION" title={r.title} closeHref="/" closeLabel="Close solution" />
 
         <section className="solution-heading">
           <span className="tiny-kicker">YESTERDAY&apos;S SOLUTION · #{String(r.id).padStart(3,"0")}</span>
@@ -58,7 +51,6 @@ export default function YesterdayPage() {
           </div>
         </section>
 
-        <Link className="back-journal" href="/">← Back to today&apos;s riddle</Link>
       </div>
     </main>
   );
