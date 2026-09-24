@@ -1066,3 +1066,70 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
   .archive-entry h2{font-size:19px}
   .archive-index{font-size:22px}
 }
+
+
+/* Literal puzzle setup illustrations */
+.literal-illustration{max-width:100%;filter:drop-shadow(0 3px 0 rgba(32,39,53,.035))}
+.literal-illustration text{font-family:var(--font-body),system-ui,sans-serif}
+.bridge-night{fill:#14283d;stroke:#202735;stroke-width:2}
+.scene-star{fill:#fff0b6}
+.river-line{fill:none;stroke:#61bfd0;stroke-width:3;stroke-linecap:round;opacity:.75}
+.river-line.faint{opacity:.35;stroke-width:2}
+.bank-shape{fill:#385445;stroke:#202735;stroke-width:2}
+.bank-shape.right{fill:#415f4f}
+.bridge-rope{fill:none;stroke:#d4c0a4;stroke-width:3;stroke-linecap:round}
+.bridge-deck{fill:none;stroke:#9c7348;stroke-width:9;stroke-linecap:round}
+.bridge-plank{fill:none;stroke:#e8c795;stroke-width:4;stroke-linecap:round}
+.bridge-post{fill:none;stroke:#e8c795;stroke-width:4;stroke-linecap:round}
+.traveler-head{fill:#ffd1bd;stroke:#202735;stroke-width:2}
+.traveler-body{fill:none;stroke:#f7f4ec;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.time-tag{fill:#fff9f1;stroke:#202735;stroke-width:1.5}
+.time-tag-text{fill:#202735;font-size:11px;font-weight:900}
+.flashlight-object rect{fill:#ffc857;stroke:#202735;stroke-width:2}
+.flashlight-ring{fill:none;stroke:#202735;stroke-width:2}
+.flashlight-beam-literal{fill:rgba(255,200,87,.30);stroke:#ffc857;stroke-width:1}
+.scene-caption-text{fill:#718092;font-size:9px;font-weight:900;letter-spacing:.08em}
+.bridge-illustration .scene-caption-text{fill:#d6e0e8}
+.scene-caption-text.center{letter-spacing:.07em}
+.scene-title-text{fill:#69727f;font-size:10px;font-weight:900;letter-spacing:.1em}
+
+.literal-rope{fill:none;stroke:#ad7a45;stroke-width:9;stroke-linecap:round;stroke-dasharray:1 0}
+.rope-end{fill:#6e4827;stroke:#202735;stroke-width:2}
+.lighter-body{fill:#ff7058;stroke:#202735;stroke-width:2}
+.lighter-top{fill:#7b858e;stroke:#202735;stroke-width:2}
+.lighter-flame{fill:#ffc857;stroke:#dc513d;stroke-width:2}
+
+.literal-coin{fill:#ffc857;stroke:#7d5d22;stroke-width:2.2}
+.literal-coin-text{fill:#5a4117;font-size:10px;font-weight:900}
+.scale-ink{fill:none;stroke:#56616d;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.scale-ink.thin{stroke-width:2.5}
+.scale-pivot-dot{fill:#25b7a5;stroke:#202735;stroke-width:2}
+.scale-pan{fill:none;stroke:#56616d;stroke-width:4;stroke-linecap:round}
+
+.wall-panel{fill:#efe5d7;stroke:#c9b9a6;stroke-width:2}
+.literal-switch-plate{fill:#fffaf4;stroke:#8e8171;stroke-width:2}
+.literal-switch{fill:none;stroke:#202735;stroke-width:5;stroke-linecap:round}
+.literal-switch-knob{fill:#ff7058;stroke:#202735;stroke-width:2}
+.switch-number{fill:#202735;font-size:13px;font-weight:900}
+.room-door{fill:#d8c5aa;stroke:#796956;stroke-width:2}
+.door-knob{fill:#796956}
+.bulb-glass-literal{fill:#fff0a7;stroke:#202735;stroke-width:2}
+.bulb-base-literal{fill:#9aa0a6;stroke:#202735;stroke-width:2}
+.bulb-filament{fill:none;stroke:#d58c20;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.illustration-wrap:has(.literal-illustration){
+  border-radius:24px;
+  background:#fff7ed;
+  overflow:hidden;
+  padding:8px;
+}
+.illustration-wrap:has(.bridge-illustration){
+  background:#edf3f5;
+}
+.illustration-wrap:has(.literal-illustration)::before{display:none}
+
+@media(max-width:430px){
+  .literal-illustration{max-height:185px}
+  .time-tag-text{font-size:10px}
+  .scene-caption-text{font-size:8px}
+}
