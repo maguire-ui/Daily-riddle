@@ -222,7 +222,7 @@ test("coin solution replay visibly moves coins before the scale settles", async 
   const before = await coinOne.boundingBox();
   expect(before).not.toBeNull();
 
-  await page.getByRole("button", { name: /Next/ }).click();
+  await page.getByRole("button", { name: "Next →", exact: true }).click();
   await expect(page.getByText("PLACING COINS…")).toBeVisible();
 
   await page.waitForTimeout(350);
