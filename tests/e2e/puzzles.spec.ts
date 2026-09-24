@@ -57,7 +57,8 @@ function traveler(page: Page, value: number) {
 async function cross(page: Page, people: number[], buttonName: RegExp) {
   for (const person of people) await traveler(page, person).click();
   await page.getByRole("button", { name: buttonName }).click();
-  await page.waitForTimeout(750);
+  await expect(page.locator(".live-pill")).toContainText(/CROSSING/);
+  await expect(page.locator(".live-pill")).toContainText("READY", { timeout: 3500 });
 }
 
 test("bridge puzzle completes the canonical 17-minute solution", async ({ page }) => {
@@ -111,7 +112,14 @@ test("typed bridge answer rejects only-the-number and accepts the actual method"
 
   await input.fill("1 and 2 cross, 1 returns, 7 and 10 cross, 2 returns, then 1 and 2 cross again for 17 minutes.");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
-  await expect(page.getByText(/You got it/)).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
+  await expect(page.getByText("Next riddle arrives in")).toBeVisible();
+  await expect(page.locator(".next-riddle-countdown strong")).toHaveText(/\d{2}:\d{2}:\d{2}/);
+
+  await page.getByRole("button", { name: /Repeat riddle/i }).click();
+  await expect(page.getByRole("heading", { name: "The Bridge at Night" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Try the interactive puzzle/i })).toBeVisible();
 });
 
 
@@ -179,4 +187,51 @@ test("solution reveal and archive pages load in the same visual system", async (
   await page.waitForLoadState("domcontentloaded");
   await expect(page.getByText("Past riddles", { exact: true })).toBeVisible();
   await expect(page.getByText(/No peeking ahead/i)).toBeVisible();
+});
+
+
+test("yesterday solution offers an animated visual walkthrough", async ({ page }) => {
+  await page.goto("/yesterday");
+  await page.waitForLoadState("domcontentloaded");
+
+  const replayLink = page.getByRole("link", { name: /Play solving animation/i });
+  await expect(replayLink).toBeVisible();
+  await replayLink.click();
+
+  await expect(page).toHaveURL(/\/yesterday\/play/);
+  await expect(page.getByText("VISUAL WALKTHROUGH")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Start with 24 possibilities" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Play/ }).click();
+  await expect(page.getByRole("heading", { name: "Weigh 1–4 against 5–8" })).toBeVisible({ timeout: 3500 });
+  await expect(page.locator(".replay-scale")).toHaveClass(/left-down/);
+});
+
+test("saved solve loads directly into the solved-today screen and can repeat", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("daily-riddle-3", JSON.stringify({ solved: true, guesses: 4 }));
+  });
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
+  await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
+  await expect(page.getByText(/after 4 guesses/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Repeat riddle/i })).toBeVisible();
+
+  await page.getByRole("button", { name: /Repeat riddle/i }).click();
+  await expect(page.getByText("THE SETUP")).toBeVisible();
+});
+
+test("solved screen stays inside a narrow phone viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.addInitScript(() => {
+    window.localStorage.setItem("daily-riddle-3", JSON.stringify({ solved: true, guesses: 2 }));
+  });
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  await expect(page.locator(".next-riddle-countdown strong")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Repeat riddle/i })).toBeVisible();
 });
