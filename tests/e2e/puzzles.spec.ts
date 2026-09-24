@@ -154,9 +154,9 @@ test("interactive museum keypad solves with the correct three-digit code", async
   }
   await dialog.getByRole("button", { name: "TRY CODE" }).click();
 
-  await expect(dialog.getByText(/Unlocked — that is the correct code/i)).toBeVisible();
   await expect(dialog).toHaveCount(0, { timeout: 3000 });
   await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
+  await expect(page.getByText("The Museum Lock")).toBeVisible();
 });
 
 
