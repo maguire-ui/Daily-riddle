@@ -130,16 +130,55 @@ export function normalize(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function normalizeMeaning(s: string) {
+  return normalize(s)
+    .replace(/\bthe\b/g, " ")
+    .replace(/\bone\b/g, "1")
+    .replace(/\btwo\b/g, "2")
+    .replace(/\bseven\b/g, "7")
+    .replace(/\bten\b/g, "10")
+    .replace(/\bseventeen\b/g, "17")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function bridgeAnswerIsCorrect(raw: string) {
+  const answer = normalizeMeaning(raw);
+  if (!answer.includes("17")) return false;
+
+  // Natural-language bridge answers vary a lot: "take 1 and 2 down",
+  // "send 1 & 2 across", "bring 1 back", etc. Judge the move sequence,
+  // not the exact verbs used.
+  const pair12 = /\b1\s+(?:(?:and|with)\s+)?2\b/g;
+  const pair710 = /\b7\s+(?:(?:and|with)\s+)?10\b/g;
+  const return1 = /\b(?:(?:bring|take|send|move)\s+)?1\s+(?:back|return|returns|returned|comes?\s+back)\b/g;
+  const return2 = /\b(?:(?:bring|take|send|move)\s+)?2\s+(?:back|return|returns|returned|comes?\s+back)\b/g;
+
+  const pair12Matches = [...answer.matchAll(pair12)].map((match) => match.index ?? -1);
+  if (pair12Matches.length < 2) return false;
+
+  const first12 = pair12Matches[0];
+  const r1 = return1.exec(answer)?.index ?? -1;
+  const sevenTen = pair710.exec(answer)?.index ?? -1;
+  const r2 = return2.exec(answer)?.index ?? -1;
+  const last12 = pair12Matches.find((index) => index > r2) ?? -1;
+
+  return first12 >= 0 && r1 > first12 && sevenTen > r1 && r2 > sevenTen && last12 > r2;
+}
+
 export function answerIsCorrect(riddle: Riddle, raw: string) {
   const answer = normalize(raw);
   if (!answer) return false;
 
   if (riddle.forbiddenConcepts?.some((x) => answer.includes(normalize(x)))) return false;
 
+  if (riddle.id === 3) return bridgeAnswerIsCorrect(raw);
+
   if (riddle.accepted?.some((x) => answer === normalize(x))) return true;
 
+  const meaning = normalizeMeaning(raw);
   return riddle.requiredConcepts.every((group) =>
-    group.some((phrase) => answer.includes(normalize(phrase)))
+    group.some((phrase) => meaning.includes(normalizeMeaning(phrase)))
   );
 }
 
