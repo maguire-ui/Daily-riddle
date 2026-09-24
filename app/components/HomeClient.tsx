@@ -11,7 +11,7 @@ type PublicRiddle = {
   category: string;
   difficulty: string;
   question: string;
-  visualizer: "rope" | "coins" | "bridge" | "switches";
+  visualizer: "rope" | "coins" | "bridge" | "switches" | "lock";
 };
 
 function ArrowIcon() {
@@ -104,6 +104,26 @@ function PuzzleIllustration({ id }: { id: number }) {
         ))}
         <rect className="room-door" x="276" y="43" width="118" height="154" rx="8"/>
         <circle className="door-knob" cx="378" cy="121" r="5"/>
+      </svg>
+    );
+  }
+
+  if (id === 5) {
+    const keys = [
+      [272,82],[310,82],[348,82],
+      [272,118],[310,118],[348,118],
+      [272,154],[310,154],[348,154],
+      [310,190],
+    ];
+    return (
+      <svg className="puzzle-illustration simple-scene-illustration lock-illustration" viewBox="0 0 420 240" role="img" aria-label="A museum display lock with a three digit keypad">
+        <rect className="museum-case" x="28" y="38" width="190" height="164" rx="24"/>
+        <rect className="museum-glass" x="48" y="58" width="150" height="124" rx="18"/>
+        <path className="museum-object" d="M84 157h77M94 157l13-58h30l14 58M109 111h27M103 128h40"/>
+        <rect className="keypad-shell" x="240" y="42" width="140" height="166" rx="22"/>
+        <rect className="keypad-display" x="264" y="58" width="92" height="18" rx="8"/>
+        {keys.map(([x,y],index)=><circle key={index} className="keypad-dot" cx={x} cy={y} r="10"/>)}
+        <path className="lock-latch" d="M213 110h28"/>
       </svg>
     );
   }
