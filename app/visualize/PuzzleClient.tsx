@@ -98,7 +98,7 @@ function RopePuzzle({ riddleId }: { riddleId: number }) {
           const burnedLeft = rope.burnedLeft + leftAdd * factor;
           const burnedRight = rope.burnedRight + rightAdd * factor;
           const finished = burnedLeft + burnedRight >= 59.999;
-          let doneAt = rope.doneAt;
+          let doneAt: number | null = rope.doneAt;
 
           if (finished && doneAt === null) {
             const rate = (rope.leftLit ? 1 : 0) + (rope.rightLit ? 1 : 0);
