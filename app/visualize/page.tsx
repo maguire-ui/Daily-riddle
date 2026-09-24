@@ -10,7 +10,7 @@ export default function VisualizePage() {
   }
 
   return (
-    <main className="app shell shell-wide">
+    <main className={`app shell shell-wide riddle-theme riddle-${riddle.id}`}>
       <header className="site-header">
         <Link className="wordmark" href="/">
           <span className="wordmark-box">DR</span>
