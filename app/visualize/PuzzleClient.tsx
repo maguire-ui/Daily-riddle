@@ -496,7 +496,7 @@ function CoinsPuzzle({ riddleId, testHidden }: { riddleId: number; testHidden?: 
         <div className="control-dock">
           <button className="control-button" onClick={undoMove} disabled={snapshots.length === 0}>Undo move</button>
           <button className="control-button" onClick={() => { pushSnapshot(); setLeft([]); setRight([]); setLastOutcome(null); }}>Clear trays</button>
-          <button className="action-button" onClick={weigh} disabled={history.length >= 3 || (left.length === 0 && right.length === 0)}>WEIGH NOW</button>
+          <button className="action-button" onClick={weigh} disabled={!hidden || history.length >= 3 || (left.length === 0 && right.length === 0)}>WEIGH NOW</button>
         </div>
 
         <div className="weigh-history">
@@ -683,7 +683,7 @@ function SwitchesPuzzle({ riddleId, testControl }: { riddleId: number; testContr
       setMessage("Correct — you identified the controlling switch.");
       saveSolved(riddleId);
     } else {
-      setMessage("Wrong switch. Reset tomorrow's logic in your head and try the method again.");
+      setMessage("Wrong switch. Use the bulb evidence, reset, and try the method again.");
     }
   }
 
@@ -721,13 +721,13 @@ function SwitchesPuzzle({ riddleId, testControl }: { riddleId: number; testContr
           <div className="switch-bank">
             {[1,2,3].map((raw) => {
               const id = raw as 1|2|3;
-              return <button key={id} className={`wall-switch ${switches[id] ? "on" : ""}`} onClick={() => toggle(id)} disabled={entered}>
+              return <button key={id} className={`wall-switch ${switches[id] ? "on" : ""}`} onClick={() => toggle(id)} disabled={entered || control === null}>
                 <span className="switch-track"><i /></span>
                 <strong>SWITCH {id}</strong>
                 <small>{switches[id] ? "ON" : "OFF"}</small>
               </button>;
             })}
-            <button className="control-button wait-button" onClick={wait} disabled={entered}>WAIT A FEW MINUTES</button>
+            <button className="control-button wait-button" onClick={wait} disabled={entered || control === null}>WAIT A FEW MINUTES</button>
           </div>
 
           <div className={`bulb-room ${entered ? "open" : ""}`}>
@@ -745,7 +745,7 @@ function SwitchesPuzzle({ riddleId, testControl }: { riddleId: number; testContr
         </div>
 
         {!entered ? (
-          <div className="control-dock"><button className="action-button" onClick={enterRoom}>ENTER ROOM — ONE CHANCE</button></div>
+          <div className="control-dock"><button className="action-button" onClick={enterRoom} disabled={control === null}>{control === null ? "CALIBRATING…" : "ENTER ROOM — ONE CHANCE"}</button></div>
         ) : (
           <div className="diagnosis-panel">
             <div><span className="stage-label">FINAL ANSWER</span><h3>Which switch controls the bulb?</h3></div>
