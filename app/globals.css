@@ -1375,3 +1375,42 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
   .solution-step-copy-motion,.replay-scale-status,.replay-diagnosis{animation:none!important}
   .replay-coin.moving-coin,.replay-scale-beam,.replay-pan,.solution-progress i{transition-duration:.01ms!important;transition-delay:0ms!important}
 }
+
+
+/* Replayable archive */
+.archive-replay-entry{cursor:pointer}
+.archive-replay-label{
+  display:inline-block;margin-top:6px;font-size:9px;font-weight:800;color:var(--teal-dark);
+  letter-spacing:.01em
+}
+.archive-replay-entry .replay-mark{
+  display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,200,87,.34);color:var(--ink);font-size:19px;transform:none;
+  transition:transform .45s cubic-bezier(.16,1,.3,1),background .2s ease
+}
+.archive-replay-entry:hover .replay-mark{transform:rotate(-40deg) scale(1.06);background:var(--gold)}
+
+.past-riddle-page{min-height:100dvh;padding:env(safe-area-inset-top) 0 calc(40px + env(safe-area-inset-bottom));color:var(--ink)}
+.past-riddle-shell{width:min(100% - 28px,900px);margin:0 auto}
+.past-riddle-intro{padding:34px 3px 24px}
+.past-riddle-intro h1{
+  margin:8px 0 0;font-family:var(--font-heading);font-size:clamp(38px,7vw,64px);
+  line-height:.96;letter-spacing:-.052em
+}
+.past-riddle-meta{display:flex;align-items:center;gap:9px;margin-top:12px;color:var(--muted);font-size:10px;font-weight:800}
+.past-riddle-meta i{width:4px;height:4px;border-radius:50%;background:var(--line-2)}
+.past-riddle-intro>p{
+  max-width:760px;margin:18px 0 0;padding:18px 20px;border:1.5px solid var(--line);
+  border-radius:18px 22px 17px 20px;background:rgba(255,252,247,.82);
+  box-shadow:5px 6px 0 var(--shadow);font-family:var(--font-heading);
+  font-size:clamp(17px,2.5vw,23px);line-height:1.48;letter-spacing:-.02em
+}
+.past-riddle-game{padding:8px 0 24px}
+.past-riddle-game .puzzle-client{width:100%}
+
+@media(max-width:520px){
+  .past-riddle-shell{width:min(100% - 18px,900px)}
+  .past-riddle-intro{padding-top:26px}
+  .past-riddle-intro>p{padding:15px 14px;box-shadow:4px 5px 0 var(--shadow)}
+  .archive-replay-label{font-size:8px}
+}
