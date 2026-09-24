@@ -270,7 +270,7 @@ export default function SolutionReplay({ type, title }: { type: ReplayType; titl
           </div>
         </section>
 
-        <section className="solution-player-canvas" aria-live="polite">
+        <section className={`solution-player-canvas solution-player-canvas-${type}`} aria-live="polite">
           {type === "coins" ? <CoinReplay step={step} settled={settled}/> : null}
           {type === "bridge" ? <BridgeReplay step={step}/> : null}
           {type === "rope" ? <RopeReplay step={step}/> : null}
