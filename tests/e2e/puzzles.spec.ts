@@ -105,24 +105,24 @@ test("live museum-lock riddle rejects a wrong code and accepts the unique code",
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
 
-  await expect(page.getByRole("heading", { name: "The Museum Lock" })).toBeVisible();
-  await expect(page.getByText(/013 — none of these digits/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The Black Glass Vault" })).toBeVisible();
+  await expect(page.getByText(/2589 — three digits/i)).toBeVisible();
 
   const input = page.getByLabel("Your solution");
-  await input.fill("257");
+  await input.fill("5278");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
   await expect(page.getByText(/Not quite/)).toBeVisible();
 
-  await input.fill("The code is 527.");
+  await input.fill("The code is 5728.");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
 
   await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
-  await expect(page.getByText("The Museum Lock")).toBeVisible();
+  await expect(page.getByText("The Black Glass Vault")).toBeVisible();
   await expect(page.getByText("Next riddle arrives in")).toBeVisible();
   await expect(page.locator(".next-riddle-countdown strong")).toHaveText(/\d{2}:\d{2}:\d{2}/);
 
   await page.getByRole("button", { name: /Repeat riddle/i }).click();
-  await expect(page.getByRole("heading", { name: "The Museum Lock" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The Black Glass Vault" })).toBeVisible();
 });
 
 
@@ -134,7 +134,7 @@ test("home opens the interactive puzzle in-place and returns without navigation"
   await page.getByRole("button", { name: /Try the interactive puzzle/i }).click();
   const dialog = page.getByRole("dialog", { name: /Interactive puzzle/i });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText("Crack the display code")).toBeVisible();
+  await expect(dialog.getByText("Crack the vault code")).toBeVisible();
   expect(page.url()).toBe(before);
 
   await page.getByRole("button", { name: "Close interactive puzzle" }).click();
@@ -142,21 +142,21 @@ test("home opens the interactive puzzle in-place and returns without navigation"
   expect(page.url()).toBe(before);
 });
 
-test("interactive museum keypad solves with the correct three-digit code", async ({ page }) => {
+test("interactive vault keypad solves with the correct four-digit code", async ({ page }) => {
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
 
   await page.getByRole("button", { name: /Try the interactive puzzle/i }).click();
   const dialog = page.getByRole("dialog", { name: /Interactive puzzle/i });
 
-  for (const digit of ["5", "2", "7"]) {
+  for (const digit of ["5", "7", "2", "8"]) {
     await dialog.getByRole("button", { name: digit, exact: true }).click();
   }
   await dialog.getByRole("button", { name: "TRY CODE" }).click();
 
   await expect(dialog).toHaveCount(0, { timeout: 3000 });
   await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
-  await expect(page.getByText("The Museum Lock")).toBeVisible();
+  await expect(page.getByText("The Black Glass Vault")).toBeVisible();
 });
 
 
