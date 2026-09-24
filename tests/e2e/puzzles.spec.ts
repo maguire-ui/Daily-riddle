@@ -70,7 +70,7 @@ test("bridge puzzle completes the canonical 17-minute solution", async ({ page }
   await cross(page, [1, 2], /CROSS/);
 
   await expect(page.getByText(/Perfect — everyone crossed in exactly 17 minutes/)).toBeVisible();
-  await expect(page.getByText("17:00")).toBeVisible();
+  await expect(page.locator(".hud-stat").filter({ hasText: "ELAPSED" }).getByText("17:00")).toBeVisible();
 });
 
 async function prepareSwitchMethod(page: Page) {
