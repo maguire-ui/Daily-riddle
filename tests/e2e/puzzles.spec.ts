@@ -343,3 +343,111 @@ test("secondary pages use the same top-right close pattern", async ({ page }) =>
   await expect(page.getByRole("link", { name: "Close solution animation" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Solution$/ })).toHaveCount(0);
 });
+
+
+async function clippedVisibleText(page: Page) {
+  return page.evaluate(() => {
+    const selector = [
+      "h1","h2","h3","p","small","strong","button","a",
+      ".replay-diagnosis",".branch-note",".stage-label",".bank-label",
+      ".telemetry-head",".friendly-feedback",".success-banner",".error-banner"
+    ].join(",");
+
+    const hiddenValues = new Set(["hidden", "clip"]);
+
+    return Array.from(document.querySelectorAll<HTMLElement>(selector))
+      .filter((element) => {
+        const text = (element.innerText || element.textContent || "").trim();
+        if (!text) return false;
+
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        if (
+          style.display === "none" ||
+          style.visibility === "hidden" ||
+          Number(style.opacity) === 0 ||
+          rect.width <= 0 ||
+          rect.height <= 0
+        ) return false;
+
+        if (hiddenValues.has(style.overflowX) && element.scrollWidth > element.clientWidth + 2) return true;
+        if (hiddenValues.has(style.overflowY) && element.scrollHeight > element.clientHeight + 2) return true;
+
+        let parent = element.parentElement;
+        while (parent && parent !== document.body && parent !== document.documentElement) {
+          const parentStyle = getComputedStyle(parent);
+          const parentRect = parent.getBoundingClientRect();
+
+          if (
+            hiddenValues.has(parentStyle.overflowX) &&
+            (rect.left < parentRect.left - 2 || rect.right > parentRect.right + 2)
+          ) return true;
+
+          if (
+            hiddenValues.has(parentStyle.overflowY) &&
+            (rect.top < parentRect.top - 2 || rect.bottom > parentRect.bottom + 2)
+          ) return true;
+
+          parent = parent.parentElement;
+        }
+
+        return false;
+      })
+      .map((element) => ({
+        text: (element.innerText || element.textContent || "").trim().slice(0, 90),
+        className: element.className,
+      }));
+  });
+}
+
+test("coin walkthrough final step keeps all explanation text below the coins", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 780 });
+  await page.goto("/yesterday/play");
+  await page.waitForLoadState("domcontentloaded");
+
+  const next = page.getByRole("button", { name: "Next →", exact: true });
+  for (let index = 0; index < 4; index += 1) {
+    await next.click();
+    await page.waitForTimeout(120);
+  }
+
+  await page.waitForTimeout(2000);
+  await expect(page.getByRole("heading", { name: "The scale balances" })).toBeVisible();
+  await expect(page.getByText("✓ Coin 6 is the lighter counterfeit")).toBeVisible();
+
+  const scale = await page.locator(".replay-scale-area").boundingBox();
+  const diagnosis = await page.locator(".replay-diagnosis").boundingBox();
+  const note = await page.locator(".branch-note").boundingBox();
+  const canvas = await page.locator(".solution-player-canvas").boundingBox();
+
+  expect(scale).not.toBeNull();
+  expect(diagnosis).not.toBeNull();
+  expect(note).not.toBeNull();
+  expect(canvas).not.toBeNull();
+
+  expect(diagnosis!.y).toBeGreaterThanOrEqual(scale!.y + scale!.height - 2);
+  expect(note!.y).toBeGreaterThanOrEqual(diagnosis!.y + diagnosis!.height - 2);
+  expect(note!.y + note!.height).toBeLessThanOrEqual(canvas!.y + canvas!.height + 2);
+
+  const clipped = await clippedVisibleText(page);
+  expect(clipped).toEqual([]);
+});
+
+for (const width of [320, 375]) {
+  test(`important UI text is not clipped at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 812 });
+
+    for (const route of ["/", "/yesterday", "/archive", "/yesterday/play", "/visualize", "/riddle/1"]) {
+      await page.goto(route);
+      await page.waitForLoadState("domcontentloaded");
+
+      const horizontalOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth
+      );
+      expect(horizontalOverflow, `${route} has horizontal overflow at ${width}px`).toBeLessThanOrEqual(1);
+
+      const clipped = await clippedVisibleText(page);
+      expect(clipped, `${route} has clipped text at ${width}px: ${JSON.stringify(clipped)}`).toEqual([]);
+    }
+  });
+}
