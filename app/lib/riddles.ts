@@ -236,6 +236,8 @@ export function getPreviousRiddle(now = new Date()) {
 // Temporary live override for the requested one-off test.
 // It intentionally does not enter RIDDLES, so archive/history and the permanent
 // no-repeat schedule remain untouched.
-export function getLiveRiddle(_now = new Date()) {
-  return TEST_RIDDLE;
+export const TEST_RIDDLE_DAY = "2026-09-24";
+
+export function getLiveRiddle(now = new Date()) {
+  return currentDayKey(now) === TEST_RIDDLE_DAY ? TEST_RIDDLE : getCurrentRiddle(now);
 }
