@@ -1493,3 +1493,192 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
 @media(max-width:520px){
   .lock-display-four span{min-width:0}
 }
+
+
+/* Layout safety: let replay content grow instead of clipping or covering text. */
+.solution-player-canvas{
+  min-height:390px;
+  overflow:hidden;
+}
+.solution-replay-scene{
+  position:relative;
+  inset:auto;
+  width:100%;
+  min-height:390px;
+  height:auto;
+  padding:26px;
+}
+.solution-player-canvas-coins .coin-replay-scene{
+  min-height:460px;
+}
+.coin-replay-scene{
+  grid-template-rows:auto 292px auto auto;
+  align-content:start;
+}
+.replay-scale-area{
+  height:292px;
+}
+.replay-diagnosis,
+.replay-diagnosis-spacer,
+.branch-note{
+  position:relative;
+  z-index:8;
+}
+.replay-diagnosis{
+  margin-top:2px;
+  line-height:1.35;
+  padding:0 8px;
+}
+.branch-note{
+  display:block;
+  width:min(100%,560px);
+  margin:0 auto;
+  padding:0 8px 2px;
+  font-size:9px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+
+/* Don't intentionally truncate important UI copy. Let containers grow and wrap. */
+.secondary-topbar{
+  min-height:76px;
+  height:auto;
+  padding:10px 0;
+}
+.secondary-topbar-copy,
+.stage-head>div,
+.answer-label-row>div,
+.journal-link>span:last-child,
+.archive-entry>div,
+.solution-player-copy,
+.bridge-instruction,
+.telemetry-head,
+.hud-stat>span:last-child{
+  min-width:0;
+}
+.secondary-topbar-copy>strong{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  overflow-wrap:anywhere;
+}
+.solution-player-copy h1,
+.solution-player-copy p,
+.stage-head h2,
+.bridge-instruction strong,
+.bridge-instruction span,
+.telemetry-head span,
+.hud-stat strong,
+.hud-stat small,
+.journal-link strong,
+.journal-link small,
+.archive-entry h2,
+.archive-meta,
+.friendly-feedback strong,
+.friendly-feedback small,
+.success-banner,
+.error-banner{
+  overflow-wrap:anywhere;
+}
+.replay-move-label{
+  max-width:calc(100% - 24px);
+  white-space:normal;
+  text-align:center;
+  line-height:1.3;
+}
+.solution-player-controls button{
+  min-width:0;
+  white-space:normal;
+  line-height:1.2;
+  padding:8px 10px;
+}
+.game-stage,
+.daily-paper,
+.solution-paper,
+.solution-player-canvas,
+.lock-console,
+.card{
+  min-width:0;
+}
+
+/* Narrow-phone safety. */
+@media(max-width:430px){
+  .solution-player-canvas{
+    min-height:360px;
+  }
+  .solution-replay-scene{
+    min-height:360px;
+    padding:18px 12px;
+  }
+  .solution-player-canvas-coins .coin-replay-scene{
+    min-height:455px;
+  }
+  .coin-replay-scene{
+    grid-template-rows:auto 300px auto auto;
+    gap:10px;
+  }
+  .replay-scale-area{
+    width:100%;
+    height:300px;
+  }
+  .replay-scale{
+    height:205px;
+  }
+  .replay-pans{
+    gap:10%;
+  }
+  .replay-coin.moving-coin{
+    width:34px;
+    height:34px;
+    font-size:9px;
+  }
+  .replay-diagnosis{
+    font-size:13px;
+    padding:0 10px;
+  }
+  .branch-note{
+    font-size:8px;
+    line-height:1.5;
+    padding:0 12px 4px;
+  }
+  .solution-player-copy{
+    margin-bottom:16px;
+  }
+  .solution-player-copy h1{
+    font-size:clamp(28px,9vw,36px);
+    line-height:1.02;
+  }
+  .solution-player-copy p{
+    font-size:11px;
+    line-height:1.55;
+  }
+  .secondary-topbar-copy>strong{
+    max-width:none;
+  }
+}
+
+@media(max-width:350px){
+  .solution-player-shell{
+    width:min(100% - 14px,930px);
+  }
+  .solution-player-canvas-coins .coin-replay-scene{
+    min-height:470px;
+  }
+  .solution-player-controls{
+    grid-template-columns:1fr 1fr;
+  }
+  .solution-player-controls .play-solution-button,
+  .solution-player-controls .replay-solution-button{
+    grid-column:span 1;
+  }
+  .solution-player-controls button{
+    min-height:48px;
+    font-size:12px;
+  }
+  .secondary-topbar{
+    gap:10px;
+  }
+  .secondary-topbar-copy>strong{
+    font-size:14px;
+  }
+}
