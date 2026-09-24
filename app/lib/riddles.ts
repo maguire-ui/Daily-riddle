@@ -7,7 +7,7 @@ export type Riddle = {
   category: string;
   difficulty: "Hard" | "Brutal" | "Insane";
   question: string;
-  visualizer: "rope" | "coins" | "bridge";
+  visualizer: "rope" | "coins" | "bridge" | "switches";
   accepted?: string[];
   requiredConcepts: string[][];
   forbiddenConcepts?: string[];
@@ -76,10 +76,12 @@ export const RIDDLES: Riddle[] = [
     question:
       "Four people must cross a narrow bridge at night. They have one flashlight, at most two can cross at once, and a pair moves at the slower person's speed. Their times are 1, 2, 7, and 10 minutes. Can everyone cross in exactly 17 minutes?",
     visualizer: "bridge",
-    accepted: ["17", "17 minutes", "yes 17", "yes, 17 minutes"],
     requiredConcepts: [
       ["1 and 2", "1 & 2", "one and two"],
+      ["1 returns", "one returns", "1 comes back", "one comes back"],
       ["7 and 10", "7 & 10", "seven and ten"],
+      ["2 returns", "two returns", "2 comes back", "two comes back"],
+      ["1 and 2", "1 & 2", "one and two"],
       ["17", "seventeen"],
     ],
     solution:
@@ -93,9 +95,36 @@ export const RIDDLES: Riddle[] = [
       "Total: 17 minutes.",
     ],
   },
+  {
+    id: 4,
+    slug: "three-switches-one-bulb",
+    title: "The Three Switches",
+    category: "Observation",
+    difficulty: "Hard",
+    question:
+      "Outside a closed room are three switches. Exactly one controls an old-fashioned light bulb inside. You may flip the switches however you like, but you may enter the room only once. How can you determine which switch controls the bulb?",
+    visualizer: "switches",
+    requiredConcepts: [
+      ["turn one on", "switch on", "leave one on", "first switch"],
+      ["wait", "few minutes", "heat", "warm", "hot"],
+      ["turn it off", "switch it off", "first off"],
+      ["turn another on", "second switch", "another switch"],
+      ["enter", "go inside", "go into the room"],
+      ["warm", "hot", "heat", "lit", "on", "cold", "cool"],
+    ],
+    solution:
+      "Turn one switch on and leave it on long enough to heat the bulb. Turn that switch off, turn a second switch on, then enter the room. If the bulb is lit, the second switch controls it. If the bulb is off but warm, the first switch controls it. If it is off and cool, the third switch controls it.",
+    steps: [
+      "Turn Switch 1 on and wait long enough for the bulb to heat up.",
+      "Turn Switch 1 off.",
+      "Turn Switch 2 on.",
+      "Enter the room once.",
+      "Lit means Switch 2; off but warm means Switch 1; off and cool means Switch 3.",
+    ],
+  },
 ];
 
-export const START_DAY = "2026-09-23";
+export const START_DAY = "2026-09-21";
 
 export function normalize(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
