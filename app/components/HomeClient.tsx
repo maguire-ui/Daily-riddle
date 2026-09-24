@@ -20,64 +20,137 @@ function ArrowIcon() {
 
 function PuzzleIllustration({ id }: { id: number }) {
   if (id === 3) {
+    const people = [
+      { x: 48, label: "1" },
+      { x: 79, label: "2" },
+      { x: 110, label: "7" },
+      { x: 141, label: "10" },
+    ];
+
     return (
-      <svg className="puzzle-illustration bridge-illustration" viewBox="0 0 420 240" role="img" aria-label="Sketch of a bridge at night">
-        <path className="ink-line" d="M48 170c32-55 64-83 97-83s67 28 101 83M175 170c33-55 66-83 99-83s66 28 98 83"/>
-        <path className="heavy-line" d="M42 171h338"/>
-        <path className="soft-line" d="M63 171l22 28m33-28 22 28m34-28 22 28m33-28 22 28m34-28 22 28m34-28 22 28"/>
-        <circle className="moon-fill" cx="330" cy="52" r="25"/>
-        <path className="scribble" d="M61 54l8 8m-4-4 7-8M119 42l3 8m-4-3 8-2M249 53l6 5m-3-3 6-6"/>
-        <path className="accent-line" d="M85 127c18-13 38-21 57-21"/>
-        <path className="accent-line arrow" d="M139 101l10 5-7 8"/>
-        <path className="flashlight-beam" d="M132 147l56-23 10 14-62 18z"/>
-        <circle className="coral-fill" cx="123" cy="149" r="8"/>
-        <path className="sketch-note" d="M34 94c8-18 18-26 31-28"/>
-        <path className="sketch-note" d="M57 59l8 6-9 4"/>
+      <svg className="puzzle-illustration bridge-illustration literal-illustration" viewBox="0 0 420 240" role="img" aria-label="Four people with crossing times 1, 2, 7 and 10 minutes wait beside a narrow bridge at night with one flashlight">
+        <rect className="bridge-night" x="10" y="18" width="400" height="204" rx="30"/>
+        <circle className="moon-fill" cx="347" cy="50" r="21"/>
+        <circle className="scene-star" cx="282" cy="45" r="2.5"/>
+        <circle className="scene-star" cx="314" cy="77" r="2"/>
+        <circle className="scene-star" cx="377" cy="89" r="2.5"/>
+
+        <path className="river-line" d="M12 174c46-18 85 17 127-1s84-18 126 0 83 17 143-1"/>
+        <path className="river-line faint" d="M23 194c51-15 89 12 132-2s88-13 125 1 76 14 118-1"/>
+
+        <path className="bank-shape" d="M12 132h112l27 82H12z"/>
+        <path className="bank-shape right" d="M296 132h112v82H269z"/>
+
+        <g className="bridge-object">
+          <path className="bridge-rope" d="M117 112c41-31 145-31 186 0"/>
+          <path className="bridge-rope" d="M117 121c41-27 145-27 186 0"/>
+          <path className="bridge-deck" d="M120 145h180"/>
+          {[130,150,170,190,210,230,250,270,290].map((x) => (
+            <path key={x} className="bridge-plank" d={`M${x} 139l8 17`} />
+          ))}
+          <path className="bridge-post" d="M120 106v51M300 106v51"/>
+        </g>
+
+        <g className="traveler-group">
+          {people.map(({x,label}) => (
+            <g key={label} transform={`translate(${x} 0)`}>
+              <circle className="traveler-head" cx="0" cy="111" r="8"/>
+              <path className="traveler-body" d="M0 120v27m-11-15 11-8 11 8M0 147l-9 15M0 147l9 15"/>
+              <rect className="time-tag" x="-14" y="166" width="28" height="20" rx="8"/>
+              <text className="time-tag-text" x="0" y="180" textAnchor="middle">{label}m</text>
+            </g>
+          ))}
+        </g>
+
+        <g className="flashlight-object" transform="translate(164 112)">
+          <rect x="0" y="0" width="30" height="13" rx="5"/>
+          <path className="flashlight-beam-literal" d="M30 2l45 12-45 12z"/>
+          <path className="flashlight-ring" d="M6 1v11"/>
+        </g>
+        <text className="scene-caption-text" x="179" y="105">ONE FLASHLIGHT</text>
+        <text className="scene-caption-text center" x="210" y="210" textAnchor="middle">MAX 2 PEOPLE AT A TIME</text>
       </svg>
     );
   }
+
   if (id === 1) {
     return (
-      <svg className="puzzle-illustration" viewBox="0 0 420 240" role="img" aria-label="Sketch of two ropes and a lighter">
-        <path className="rope-line" d="M42 102c55-36 96 38 151 3s98-29 183 10"/>
-        <path className="rope-line second" d="M51 158c48-29 93 21 141-3s100-35 179 0"/>
-        <path className="accent-line" d="M47 96c-12-16-9-29 8-37"/>
-        <path className="accent-line" d="M368 149c14-13 18-28 8-41"/>
-        <path className="flame-sketch" d="M47 85c-7-13 6-17 7-29 12 11 14 19 5 28-5 5-8 5-12 1Z"/>
-        <path className="flame-sketch" d="M367 143c-7-13 6-17 7-29 12 11 14 19 5 28-5 5-8 5-12 1Z"/>
-        <circle className="teal-ring" cx="205" cy="105" r="34"/>
-        <path className="scribble" d="M209 47c14 0 27 5 38 14m-14-1 14 1-5 12"/>
+      <svg className="puzzle-illustration literal-illustration" viewBox="0 0 420 240" role="img" aria-label="Two uneven-burning ropes and one lighter">
+        <text className="scene-title-text" x="26" y="42">ROPE A</text>
+        <path className="literal-rope" d="M31 70c45-25 74 28 119 3s75-20 112 2 74 14 126-5"/>
+        <circle className="rope-end" cx="31" cy="70" r="6"/><circle className="rope-end" cx="388" cy="70" r="6"/>
+
+        <text className="scene-title-text" x="26" y="120">ROPE B</text>
+        <path className="literal-rope" d="M31 149c39 26 77-20 116 2s79 19 116-2 76-18 125 2"/>
+        <circle className="rope-end" cx="31" cy="149" r="6"/><circle className="rope-end" cx="388" cy="151" r="6"/>
+
+        <g className="lighter-object" transform="translate(180 178)">
+          <rect className="lighter-body" x="0" y="10" width="57" height="42" rx="9"/>
+          <rect className="lighter-top" x="12" y="0" width="34" height="17" rx="4"/>
+          <path className="lighter-flame" d="M29 0c-8-11 5-15 5-25 12 10 15 18 7 27-5 5-9 5-12-2Z"/>
+        </g>
+        <text className="scene-caption-text center" x="210" y="226" textAnchor="middle">EACH ROPE BURNS FOR 60 MINUTES — NOT AT A STEADY RATE</text>
       </svg>
     );
   }
+
   if (id === 2) {
+    const coins = Array.from({ length: 12 }, (_, index) => ({
+      n: index + 1,
+      x: 28 + (index % 6) * 42,
+      y: index < 6 ? 42 : 82,
+    }));
+
     return (
-      <svg className="puzzle-illustration" viewBox="0 0 420 240" role="img" aria-label="Sketch of balance scale and coins">
-        <path className="heavy-line" d="M210 57v111M165 178h90"/>
-        <path className="heavy-line" d="M100 88h220"/>
-        <path className="ink-line" d="M100 88l-42 66h84L100 88Zm220 0-42 66h84l-42-66Z"/>
-        <circle className="coin-fill" cx="89" cy="139" r="13"/><circle className="coin-fill" cx="113" cy="139" r="13"/>
-        <circle className="coin-fill" cx="307" cy="139" r="13"/><circle className="coin-fill" cx="331" cy="139" r="13"/>
-        <path className="scribble" d="M49 54c22-14 44-17 67-8m-9-6 11 6-7 10"/>
-        <circle className="teal-ring" cx="323" cy="139" r="39"/>
+      <svg className="puzzle-illustration literal-illustration" viewBox="0 0 420 240" role="img" aria-label="Twelve numbered coins beside an empty balance scale">
+        <g className="coin-row">
+          {coins.map(({ n, x, y }) => (
+            <g key={n}>
+              <circle className="literal-coin" cx={x} cy={y} r="16"/>
+              <text className="literal-coin-text" x={x} y={y + 4} textAnchor="middle">{n}</text>
+            </g>
+          ))}
+        </g>
+
+        <g className="literal-scale" transform="translate(265 48)">
+          <path className="scale-ink" d="M62 14v122M26 148h72M4 42h116"/>
+          <circle className="scale-pivot-dot" cx="62" cy="42" r="7"/>
+          <path className="scale-ink thin" d="M16 43 2 91h43L31 43M104 43 89 91h44l-15-48"/>
+          <path className="scale-pan" d="M2 91h43M89 91h44"/>
+        </g>
+        <text className="scene-caption-text" x="274" y="211">3 WEIGHINGS MAX</text>
       </svg>
     );
   }
+
   if (id === 4) {
     return (
-      <svg className="puzzle-illustration" viewBox="0 0 420 240" role="img" aria-label="Sketch of three switches and a light bulb">
-        {[110, 210, 310].map((x, index) => (
+      <svg className="puzzle-illustration literal-illustration" viewBox="0 0 420 240" role="img" aria-label="Three switches outside a closed room with one light bulb inside">
+        <rect className="wall-panel" x="18" y="35" width="224" height="168" rx="19"/>
+        <text className="scene-title-text" x="34" y="60">OUTSIDE THE ROOM</text>
+
+        {[64,130,196].map((x, index) => (
           <g key={x}>
-            <rect className="switch-plate" x={x - 28} y="106" width="56" height="78" rx="10"/>
-            <path className="heavy-line" d={`M${x} 125v40`} />
-            <circle className={index === 1 ? "coral-fill" : "teal-fill"} cx={x} cy="128" r="10"/>
+            <rect className="literal-switch-plate" x={x - 23} y="82" width="46" height="78" rx="10"/>
+            <path className="literal-switch" d={`M${x} 101v39`}/>
+            <circle className="literal-switch-knob" cx={x} cy="101" r="9"/>
+            <text className="switch-number" x={x} y="183" textAnchor="middle">{index + 1}</text>
           </g>
         ))}
-        <path className="bulb-line" d="M210 28c-27 0-46 19-46 44 0 19 10 30 23 41v15h46v-15c13-11 23-22 23-41 0-25-19-44-46-44Z"/>
-        <path className="scribble" d="M157 41l-17-15m8 34-23-4m138-15 17-15m-8 34 23-4"/>
+
+        <rect className="room-door" x="267" y="39" width="135" height="165" rx="8"/>
+        <circle className="door-knob" cx="383" cy="125" r="5"/>
+        <text className="scene-title-text" x="285" y="61">ROOM</text>
+        <g transform="translate(334 98)">
+          <circle className="bulb-glass-literal" cx="0" cy="0" r="25"/>
+          <path className="bulb-base-literal" d="M-10 21h20v22h-20zM-12 28h24M-12 35h24"/>
+          <path className="bulb-filament" d="M-8 1 0 10 8 1"/>
+        </g>
+        <text className="scene-caption-text center" x="334" y="177" textAnchor="middle">ENTER ONCE</text>
       </svg>
     );
   }
+
   return (
     <svg className="puzzle-illustration" viewBox="0 0 420 240" aria-hidden="true">
       <path className="ink-line" d="M139 82c12-31 39-47 72-47 43 0 75 27 75 65 0 31-18 46-42 61-19 12-23 18-23 37"/>
@@ -220,11 +293,9 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
             <div className="prompt-column">
               <span className="tiny-kicker">THE SETUP</span>
               <p className="riddle-question">{riddle.question}</p>
-              <p className="hand-note">No hints hiding in the UI. Promise.</p>
             </div>
             <figure className="illustration-wrap">
               <PuzzleIllustration id={riddle.id}/>
-              <figcaption>Sketch it. Move it. Test the idea.</figcaption>
             </figure>
           </div>
 
