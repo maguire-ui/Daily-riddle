@@ -52,7 +52,7 @@ export default function PuzzleClient({ type, riddleId }: { type:"rope"|"coins"|"
     const weigh=()=>{
       if(weighings.length>=3)return;
       // Deterministic hidden demo state: coin 6 is lighter.
-      const weight=(arr:number[])=>arr.reduce((s,n)=>s+(n===6?.8:1),0);
+      const weight=(arr:number[])=>arr.reduce((s,n)=>s+(n === 6 ? 0.8 : 1),0);
       const l=weight(left),r=weight(right);
       const outcome=Math.abs(l-r)<.01?"Balance":l>r?"Left heavier":"Right heavier";
       setWeighings(w=>[...w,outcome]); setLeft([]);setRight([]);
