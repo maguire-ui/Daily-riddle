@@ -17,6 +17,12 @@ const body = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Daily Riddle",
   description: "One clever challenge. Every day.",
+  applicationName: "Daily Riddle",
+  appleWebApp: {
+    capable: true,
+    title: "Daily Riddle",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
