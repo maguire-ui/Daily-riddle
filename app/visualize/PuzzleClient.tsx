@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { playUiSound } from "../components/SoundToggle";
 
-type PuzzleType = "rope" | "coins" | "bridge" | "switches";
+type PuzzleType = "rope" | "coins" | "bridge" | "switches" | "lock";
 
 function saveSolved(riddleId: number) {
   const key = `daily-riddle-${riddleId}`;
@@ -801,6 +801,119 @@ function SwitchesPuzzle({ riddleId, testControl }: { riddleId: number; testContr
   );
 }
 
+
+function LockPuzzle({ riddleId }: { riddleId: number }) {
+  const [code, setCode] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [message, setMessage] = useState("");
+
+  function pressDigit(digit: number) {
+    if (checking || code.length >= 3) return;
+    setCode((value) => `${value}${digit}`.slice(0, 3));
+    setMessage("");
+  }
+
+  function erase() {
+    if (checking) return;
+    setCode((value) => value.slice(0, -1));
+    setMessage("");
+  }
+
+  function clear() {
+    if (checking) return;
+    setCode("");
+    setMessage("");
+  }
+
+  async function unlock() {
+    if (code.length !== 3 || checking) return;
+    setChecking(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer: code }),
+      });
+      const data = await response.json();
+
+      if (data.correct) {
+        setMessage("Unlocked — that is the correct code.");
+        saveSolved(riddleId);
+      } else {
+        setMessage("Locked. That code does not satisfy every clue.");
+      }
+    } catch {
+      setMessage("The lock could not be checked. Try again.");
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  return (
+    <div className="puzzle-shell">
+      <div className="puzzle-hud">
+        <div className="hud-stat">
+          <span className="hud-icon"><StatusIcon kind="moves" /></span>
+          <span><small>CLUES</small><strong>3</strong></span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-icon"><StatusIcon kind="target" /></span>
+          <span><small>CODE</small><strong>3 DIGITS</strong></span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-icon"><StatusIcon kind="time" /></span>
+          <span><small>REPEATS</small><strong>NONE</strong></span>
+        </div>
+      </div>
+
+      <section className="game-stage lock-stage">
+        <div className="stage-head">
+          <div>
+            <span className="stage-label">MUSEUM SECURITY</span>
+            <h2>Crack the display code</h2>
+          </div>
+          <span className="live-pill active"><i /> {checking ? "CHECKING" : "LOCKED"}</span>
+        </div>
+
+        <div className="lock-clues" aria-label="Code clues">
+          <div className="lock-clue"><strong>013</strong><span>None of these digits are in the code.</span></div>
+          <div className="lock-clue"><strong>052</strong><span>Exactly two digits are correct, but both are in the wrong positions.</span></div>
+          <div className="lock-clue"><strong>017</strong><span>Exactly one digit is correct and in the correct position.</span></div>
+        </div>
+
+        <div className="lock-console">
+          <div className="lock-display" aria-label="Entered code">
+            {[0,1,2].map((index) => (
+              <span key={index} className={code[index] ? "filled" : ""}>{code[index] ?? "·"}</span>
+            ))}
+          </div>
+
+          <div className="lock-keypad" aria-label="Museum keypad">
+            {[1,2,3,4,5,6,7,8,9].map((digit) => (
+              <button key={digit} type="button" onClick={() => pressDigit(digit)} disabled={checking || code.length >= 3}>{digit}</button>
+            ))}
+            <button className="keypad-utility" type="button" onClick={clear} disabled={checking || code.length === 0}>CLR</button>
+            <button type="button" onClick={() => pressDigit(0)} disabled={checking || code.length >= 3}>0</button>
+            <button className="keypad-utility" type="button" onClick={erase} disabled={checking || code.length === 0}>⌫</button>
+          </div>
+
+          <button className="action-button lock-submit" type="button" onClick={unlock} disabled={checking || code.length !== 3}>
+            {checking ? "CHECKING…" : "TRY CODE"}
+          </button>
+
+          {message ? (
+            <div className={message.startsWith("Unlocked") ? "success-banner compact" : "error-banner"} role="status">
+              {message}
+            </div>
+          ) : null}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function PuzzleClient({ type, riddleId, testHiddenCoin, testSwitchControl, embedded = false }: { type: PuzzleType; riddleId: number; testHiddenCoin?: HiddenCoin; testSwitchControl?: 1|2|3; embedded?: boolean }) {
   function tactilePuzzlePress(event: React.PointerEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
@@ -816,6 +929,7 @@ export default function PuzzleClient({ type, riddleId, testHiddenCoin, testSwitc
       {type === "coins" ? <CoinsPuzzle riddleId={riddleId} testHidden={testHiddenCoin} /> : null}
       {type === "bridge" ? <BridgePuzzle riddleId={riddleId} /> : null}
       {type === "switches" ? <SwitchesPuzzle riddleId={riddleId} testControl={testSwitchControl} /> : null}
+      {type === "lock" ? <LockPuzzle riddleId={riddleId} /> : null}
       {!embedded ? <div className="puzzle-footer"><Link href="/">← Back to today&apos;s riddle</Link><span>Progress saves on this device.</span></div> : null}
     </div>
   );
