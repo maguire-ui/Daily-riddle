@@ -1,9 +1,9 @@
 import HomeClient from "./components/HomeClient";
-import { getCurrentRiddle } from "./lib/riddles";
+import { getLiveRiddle } from "./lib/riddles";
 import { nextEdmontonMidnightISO } from "./lib/time";
 
 export default function Page() {
-  const riddle = getCurrentRiddle(new Date());
+  const riddle = getLiveRiddle(new Date());
   if (!riddle) {
     return <main className="empty-day"><div><span>?</span><h1>New riddle coming soon.</h1><p>The published queue has ended. Old riddles will never be recycled.</p></div></main>;
   }
