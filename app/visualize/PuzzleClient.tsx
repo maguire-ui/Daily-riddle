@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CSSProperties, useEffect, useRef, useState } from "react";
+import { playUiSound } from "../components/SoundToggle";
 
 type PuzzleType = "rope" | "coins" | "bridge" | "switches";
 
@@ -12,6 +13,8 @@ function saveSolved(riddleId: number) {
     saved = JSON.parse(localStorage.getItem(key) || "{}");
   } catch {}
   localStorage.setItem(key, JSON.stringify({ ...saved, solved: true }));
+  window.dispatchEvent(new CustomEvent("daily-riddle-solved", { detail: { riddleId } }));
+  playUiSound("success");
 }
 
 function formatPuzzleTime(value: number) {
@@ -764,14 +767,22 @@ function SwitchesPuzzle({ riddleId, testControl }: { riddleId: number; testContr
   );
 }
 
-export default function PuzzleClient({ type, riddleId, testHiddenCoin, testSwitchControl }: { type: PuzzleType; riddleId: number; testHiddenCoin?: HiddenCoin; testSwitchControl?: 1|2|3 }) {
+export default function PuzzleClient({ type, riddleId, testHiddenCoin, testSwitchControl, embedded = false }: { type: PuzzleType; riddleId: number; testHiddenCoin?: HiddenCoin; testSwitchControl?: 1|2|3; embedded?: boolean }) {
+  function tactilePuzzlePress(event: React.PointerEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    const button = target.closest("button, [role='button']");
+    if (!button) return;
+    if (button.classList.contains("wall-switch")) playUiSound("switch");
+    else playUiSound("tap");
+  }
+
   return (
-    <>
+    <div className={embedded ? "puzzle-client puzzle-client-embedded" : "puzzle-client"} onPointerDownCapture={tactilePuzzlePress}>
       {type === "rope" ? <RopePuzzle riddleId={riddleId} /> : null}
       {type === "coins" ? <CoinsPuzzle riddleId={riddleId} testHidden={testHiddenCoin} /> : null}
       {type === "bridge" ? <BridgePuzzle riddleId={riddleId} /> : null}
       {type === "switches" ? <SwitchesPuzzle riddleId={riddleId} testControl={testSwitchControl} /> : null}
-      <div className="puzzle-footer"><Link href="/">← Back to today&apos;s riddle</Link><span>Progress saves on this device.</span></div>
-    </>
+      {!embedded ? <div className="puzzle-footer"><Link href="/">← Back to today&apos;s riddle</Link><span>Progress saves on this device.</span></div> : null}
+    </div>
   );
 }
