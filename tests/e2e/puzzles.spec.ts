@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 async function openPuzzle(page: Page, type: string, query = "") {
   await page.goto(`/__test/puzzle/${type}${query}`);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
 }
 
 test("rope puzzle accepts the real method without leaking a usable clock", async ({ page }) => {
@@ -102,7 +102,7 @@ for (const control of [1, 2, 3] as const) {
 
 test("typed bridge answer rejects only-the-number and accepts the actual method", async ({ page }) => {
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
 
   const input = page.getByLabel("Your solution");
   await input.fill("17");
