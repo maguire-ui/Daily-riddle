@@ -120,8 +120,15 @@ function RopePuzzle({ riddleId }: { riddleId: number }) {
       const doneAt = game.ropes[id].doneAt;
       if (doneAt !== null && seenDone.current[id] === null) {
         seenDone.current[id] = doneAt;
-        setLog((items) => [`Rope ${id} finished at ${formatPuzzleTime(doneAt)}.`, ...items].slice(0, 6));
-        if (Math.abs(doneAt - 45) < 0.2) {
+        const hitTarget = Math.abs(doneAt - 45) < 0.35;
+        setLog((items) => [
+          hitTarget
+            ? `Rope ${id} finished at ${formatPuzzleTime(doneAt)} — target reached.`
+            : `Rope ${id} finished at ${formatPuzzleTime(doneAt)}. Clock auto-paused for your next move.`,
+          ...items,
+        ].slice(0, 6));
+        setGame((prev) => ({ ...prev, paused: true }));
+        if (hitTarget) {
           setSolved(true);
           saveSolved(riddleId);
         }
