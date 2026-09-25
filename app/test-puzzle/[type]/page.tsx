@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import PuzzleClient from "../../visualize/PuzzleClient";
 
-const TYPES = ["rope", "coins", "bridge", "switches"] as const;
+const TYPES = ["rope", "coins", "bridge", "switches", "lock", "cabinets"] as const;
 type PuzzleType = (typeof TYPES)[number];
 
 function first(value: string | string[] | undefined) {
