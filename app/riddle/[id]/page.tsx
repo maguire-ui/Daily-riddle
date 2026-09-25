@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import SecondaryHeader from "../../components/SecondaryHeader";
 import PuzzleClient from "../../visualize/PuzzleClient";
-import { RIDDLES, START_DAY, currentDayKey, dayDiff } from "../../lib/riddles";
+import { RIDDLES, isRiddlePublished } from "../../lib/riddles";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function PastRiddlePage({
   params,
@@ -10,13 +13,8 @@ export default async function PastRiddlePage({
 }) {
   const { id: rawId } = await params;
   const id = Number(rawId);
-  const publishedCount = Math.max(
-    0,
-    Math.min(RIDDLES.length, dayDiff(START_DAY, currentDayKey(new Date())))
-  );
-
   const index = RIDDLES.findIndex((riddle) => riddle.id === id);
-  if (!Number.isInteger(id) || index < 0 || index >= publishedCount) notFound();
+  if (!Number.isInteger(id) || index < 0 || !isRiddlePublished(id, new Date())) notFound();
 
   const riddle = RIDDLES[index];
 
