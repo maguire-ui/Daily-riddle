@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { RIDDLES, START_DAY, currentDayKey, dayDiff } from "../lib/riddles";
+import { getPublishedRiddles } from "../lib/riddles";
 import SecondaryHeader from "../components/SecondaryHeader";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function ArchivePage() {
-  const publishedCount = Math.max(0, Math.min(RIDDLES.length, dayDiff(START_DAY, currentDayKey(new Date()))));
-  const published = RIDDLES.slice(0, publishedCount);
+  const published = getPublishedRiddles(new Date());
 
   return (
     <main className="journal-page archive-page">
