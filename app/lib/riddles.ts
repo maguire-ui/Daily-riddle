@@ -7,7 +7,7 @@ export type Riddle = {
   category: string;
   difficulty: "Hard" | "Brutal" | "Insane";
   question: string;
-  visualizer: "rope" | "coins" | "bridge" | "switches" | "lock";
+  visualizer: "rope" | "coins" | "bridge" | "switches" | "lock" | "cabinets";
   accepted?: string[];
   requiredConcepts: string[][];
   forbiddenConcepts?: string[];
@@ -15,7 +15,7 @@ export type Riddle = {
   steps: string[];
 };
 
-export const RIDDLES: Riddle[] = [
+const BASE_RIDDLES: Riddle[] = [
   {
     id: 1,
     slug: "two-ropes-45-minutes",
@@ -146,7 +146,39 @@ export const TEST_RIDDLE: Riddle = {
   ],
 };
 
-export const START_DAY = "2026-09-22";
+export const RIDDLE_6: Riddle = {
+  id: 6,
+  slug: "seven-cabinets",
+  title: "The Seven Cabinets",
+  category: "Logic",
+  difficulty: "Brutal",
+  question:
+    "Seven locked cabinets are labeled A through G. Exactly one contains a brass key. Each cabinet has a plaque, and exactly FIVE of the seven plaques are telling the truth. A: “The key is in C or F.” B: “The key is not in A or E.” C: “The key is in B, D, or G.” D: “The key is not in C or G.” E: “The key is in A, D, or F.” F: “The key is not in B or D.” G: “The key is in E or G.” Which cabinet contains the key?",
+  visualizer: "cabinets",
+  accepted: ["f", "cabinet f", "the key is in f", "key is in f"],
+  requiredConcepts: [["f", "cabinet f"]],
+  solution:
+    "Cabinet F contains the key. Test each possible location against all seven plaques and count how many statements would be true. A gives 3 true statements, B gives 3, C gives 3, D gives 4, E gives 3, F gives exactly 5, and G gives 4. Only F satisfies the rule that exactly five plaques are true.",
+  steps: [
+    "Treat each possible cabinet A–G as a candidate.",
+    "For each candidate, evaluate all seven plaque statements as true or false.",
+    "The truth counts are A=3, B=3, C=3, D=4, E=3, F=5, G=4.",
+    "The puzzle requires exactly five true plaques.",
+    "Only Cabinet F fits, so the key is in F.",
+  ],
+};
+
+export const RIDDLES: Riddle[] = [...BASE_RIDDLES, TEST_RIDDLE, RIDDLE_6];
+
+export const PUBLISH_SCHEDULE = [
+  { date: "2026-09-21", riddleId: 1 },
+  { date: "2026-09-22", riddleId: 2 },
+  { date: "2026-09-23", riddleId: 3 },
+  { date: "2026-09-24", riddleId: 5 },
+  { date: "2026-09-25", riddleId: 6 },
+] as const;
+
+export const START_DAY = PUBLISH_SCHEDULE[0].date;
 
 export function normalize(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -221,23 +253,36 @@ export function dayDiff(a: string, b: string) {
   return Math.floor((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86400000);
 }
 
+export function getRiddleForDayKey(dayKey: string) {
+  const entry = PUBLISH_SCHEDULE.find((item) => item.date === dayKey);
+  return entry ? RIDDLES.find((riddle) => riddle.id === entry.riddleId) ?? null : null;
+}
+
 export function getCurrentRiddle(now = new Date()) {
-  const index = dayDiff(START_DAY, currentDayKey(now));
-  if (index < 0) return RIDDLES[0];
-  if (index >= RIDDLES.length) return null; // never wrap; wrapping would repeat a riddle
-  return RIDDLES[index];
+  return getRiddleForDayKey(currentDayKey(now));
 }
 
 export function getPreviousRiddle(now = new Date()) {
-  const index = dayDiff(START_DAY, currentDayKey(now)) - 1;
-  return index >= 0 && index < RIDDLES.length ? RIDDLES[index] : null;
+  const today = currentDayKey(now);
+  const previous = [...PUBLISH_SCHEDULE]
+    .filter((item) => item.date < today)
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+  return previous ? RIDDLES.find((riddle) => riddle.id === previous.riddleId) ?? null : null;
 }
 
-// Temporary live override for the requested one-off test.
-// It intentionally does not enter RIDDLES, so archive/history and the permanent
-// no-repeat schedule remain untouched.
-export const TEST_RIDDLE_DAY = "2026-09-24";
+export function getPublishedRiddles(now = new Date()) {
+  const today = currentDayKey(now);
+  return PUBLISH_SCHEDULE
+    .filter((item) => item.date < today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((item) => RIDDLES.find((riddle) => riddle.id === item.riddleId))
+    .filter((riddle): riddle is Riddle => Boolean(riddle));
+}
+
+export function isRiddlePublished(riddleId: number, now = new Date()) {
+  return getPublishedRiddles(now).some((riddle) => riddle.id === riddleId);
+}
 
 export function getLiveRiddle(now = new Date()) {
-  return currentDayKey(now) === TEST_RIDDLE_DAY ? TEST_RIDDLE : getCurrentRiddle(now);
+  return getCurrentRiddle(now);
 }
