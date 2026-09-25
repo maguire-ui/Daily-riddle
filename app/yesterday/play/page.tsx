@@ -2,6 +2,9 @@ import Link from "next/link";
 import { getPreviousRiddle } from "../../lib/riddles";
 import SolutionReplay from "./SolutionReplay";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function YesterdayPlayPage() {
   const riddle = getPreviousRiddle(new Date());
 
