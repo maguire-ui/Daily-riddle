@@ -259,7 +259,11 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
 
       if (rawMs <= 0 && !rolloverHandled.current) {
         rolloverHandled.current = true;
-        router.refresh();
+        const rolloverKey = `daily-riddle-rollover:${unlockAt}`;
+        if (sessionStorage.getItem(rolloverKey) !== "1") {
+          sessionStorage.setItem(rolloverKey, "1");
+          router.refresh();
+        }
       }
     };
 
