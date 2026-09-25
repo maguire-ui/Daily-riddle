@@ -200,7 +200,9 @@ test("solution reveal and archive pages load in the same visual system", async (
   await page.goto("/yesterday");
   await page.waitForLoadState("domcontentloaded");
   await expect(page.getByText("YESTERDAY'S SOLUTION", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The Black Glass Vault" })).toBeVisible();
   await expect(page.getByText(/Here's how it works/i)).toBeVisible();
+  await expect(page.getByRole("link", { name: /Replay interactive puzzle/i })).toBeVisible();
 
   await page.goto("/archive");
   await page.waitForLoadState("domcontentloaded");
@@ -209,15 +211,10 @@ test("solution reveal and archive pages load in the same visual system", async (
 });
 
 
-test("yesterday solution offers an animated visual walkthrough", async ({ page }) => {
-  await page.goto("/yesterday");
+test("published coin solution animation remains available after the calendar advances", async ({ page }) => {
+  await page.goto("/yesterday/play?riddle=2");
   await page.waitForLoadState("domcontentloaded");
 
-  const replayLink = page.getByRole("link", { name: /Play solving animation/i });
-  await expect(replayLink).toBeVisible();
-  await replayLink.click();
-
-  await expect(page).toHaveURL(/\/yesterday\/play/);
   await expect(page.getByText("VISUAL WALKTHROUGH")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Start with 24 possibilities" })).toBeVisible();
 
@@ -228,7 +225,7 @@ test("yesterday solution offers an animated visual walkthrough", async ({ page }
 
 
 test("coin solution replay visibly moves coins before the scale settles", async ({ page }) => {
-  await page.goto("/yesterday/play");
+  await page.goto("/yesterday/play?riddle=2");
   await page.waitForLoadState("domcontentloaded");
 
   const coinOne = page.locator(".moving-coin").filter({ hasText: /^1$/ });
@@ -337,7 +334,7 @@ test("secondary pages use the same top-right close pattern", async ({ page }) =>
   await expect(page.getByRole("link", { name: "Close archive" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Today", exact: true })).toHaveCount(0);
 
-  await page.goto("/yesterday/play");
+  await page.goto("/yesterday/play?riddle=2");
   await expect(page.getByRole("link", { name: "Close solution animation" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Solution$/ })).toHaveCount(0);
 });
@@ -400,7 +397,7 @@ async function clippedVisibleText(page: Page) {
 
 test("coin walkthrough final step keeps all explanation text below the coins", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 780 });
-  await page.goto("/yesterday/play");
+  await page.goto("/yesterday/play?riddle=2");
   await page.waitForLoadState("domcontentloaded");
 
   const next = page.getByRole("button", { name: "Next →", exact: true });
@@ -435,7 +432,7 @@ for (const width of [320, 375]) {
   test(`important UI text is not clipped at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 812 });
 
-    for (const route of ["/", "/yesterday", "/archive", "/yesterday/play", "/visualize", "/riddle/1"]) {
+    for (const route of ["/", "/yesterday", "/archive", "/yesterday/play?riddle=2", "/visualize", "/riddle/1"]) {
       await page.goto(route);
       await page.waitForLoadState("domcontentloaded");
 
