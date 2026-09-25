@@ -446,3 +446,47 @@ for (const width of [320, 375]) {
     }
   });
 }
+
+
+test("yesterday solved state never bleeds into today's new riddle", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("daily-riddle-5", JSON.stringify({ solved: true, guesses: 1 }));
+    window.localStorage.removeItem("daily-riddle-6");
+  });
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
+  await expect(page.getByRole("heading", { name: "The Seven Cabinets" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toHaveCount(0);
+});
+
+test("expired client countdown does not cause a hard reload loop", async ({ page }) => {
+  let navigationRequests = 0;
+  page.on("request", (request) => {
+    if (request.isNavigationRequest()) navigationRequests += 1;
+  });
+
+  await page.addInitScript(() => {
+    const originalNow = Date.now.bind(Date);
+    Date.now = () => originalNow() + 3 * 24 * 60 * 60 * 1000;
+  });
+
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(2500);
+
+  expect(navigationRequests).toBe(1);
+  await expect(page.locator(".drop-clock strong")).toHaveText("00:00:00");
+});
+
+test("published vault replay validates its own riddle instead of today's", async ({ page }) => {
+  await page.goto("/riddle/5");
+  await page.waitForLoadState("domcontentloaded");
+
+  for (const digit of ["5", "7", "2", "8"]) {
+    await page.getByRole("button", { name: digit, exact: true }).click();
+  }
+  await page.getByRole("button", { name: "TRY CODE" }).click();
+
+  await expect(page.getByText(/Unlocked — that is the correct code/i)).toBeVisible();
+});
