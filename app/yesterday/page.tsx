@@ -2,6 +2,9 @@ import Link from "next/link";
 import { getPreviousRiddle } from "../lib/riddles";
 import SecondaryHeader from "../components/SecondaryHeader";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function YesterdayPage() {
   const r = getPreviousRiddle(new Date());
 
