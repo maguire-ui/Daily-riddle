@@ -156,7 +156,7 @@ export const RIDDLE_6: Riddle = {
     "Seven locked cabinets are labeled A through G. Exactly one contains a brass key. Each cabinet has a plaque, and exactly FIVE of the seven plaques are telling the truth. A: “The key is in C or F.” B: “The key is not in A or E.” C: “The key is in B, D, or G.” D: “The key is not in C or G.” E: “The key is in A, D, or F.” F: “The key is not in B or D.” G: “The key is in E or G.” Which cabinet contains the key?",
   visualizer: "cabinets",
   accepted: ["f", "cabinet f", "the key is in f", "key is in f"],
-  requiredConcepts: [["f", "cabinet f"]],
+  requiredConcepts: [["cabinet f", "key is in f", "key in f", "answer is f"]],
   solution:
     "Cabinet F contains the key. Test each possible location against all seven plaques and count how many statements would be true. A gives 3 true statements, B gives 3, C gives 3, D gives 4, E gives 3, F gives exactly 5, and G gives 4. Only F satisfies the rule that exactly five plaques are true.",
   steps: [
@@ -227,6 +227,11 @@ export function answerIsCorrect(riddle: Riddle, raw: string) {
   if (riddle.forbiddenConcepts?.some((x) => answer.includes(normalize(x)))) return false;
 
   if (riddle.id === 3) return bridgeAnswerIsCorrect(raw);
+
+  if (riddle.id === 6) {
+    if (answer === "f" || answer === "cabinet f") return true;
+    return /\b(?:cabinet|key|answer)\s+(?:is\s+|in\s+)?f\b/.test(answer);
+  }
 
   if (riddle.accepted?.some((x) => answer === normalize(x))) return true;
 
