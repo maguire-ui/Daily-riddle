@@ -2,6 +2,9 @@ import HomeClient from "./components/HomeClient";
 import { getLiveRiddle } from "./lib/riddles";
 import { nextEdmontonMidnightISO } from "./lib/time";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function Page() {
   const riddle = getLiveRiddle(new Date());
   if (!riddle) {
