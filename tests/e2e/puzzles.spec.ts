@@ -101,28 +101,28 @@ for (const control of [1, 2, 3] as const) {
   });
 }
 
-test("live black-glass vault rejects a wrong code and accepts the unique code", async ({ page }) => {
+test("live Seven Cabinets rejects a wrong cabinet and accepts the unique answer", async ({ page }) => {
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
 
-  await expect(page.getByRole("heading", { name: "The Black Glass Vault" })).toBeVisible();
-  await expect(page.getByText(/2589 — three digits/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The Seven Cabinets" })).toBeVisible();
+  await expect(page.getByText(/Exactly one contains a brass key/i)).toBeVisible();
 
   const input = page.getByLabel("Your solution");
-  await input.fill("5278");
+  await input.fill("Cabinet D");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
   await expect(page.getByText(/Not quite/)).toBeVisible();
 
-  await input.fill("The code is 5728.");
+  await input.fill("The key is in Cabinet F.");
   await page.getByRole("button", { name: "CHECK ANSWER" }).click();
 
   await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
-  await expect(page.getByText("The Black Glass Vault")).toBeVisible();
+  await expect(page.getByText("The Seven Cabinets")).toBeVisible();
   await expect(page.getByText("Next riddle arrives in")).toBeVisible();
   await expect(page.locator(".next-riddle-countdown strong")).toHaveText(/\d{2}:\d{2}:\d{2}/);
 
   await page.getByRole("button", { name: /Repeat riddle/i }).click();
-  await expect(page.getByRole("heading", { name: "The Black Glass Vault" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The Seven Cabinets" })).toBeVisible();
 });
 
 
@@ -134,7 +134,7 @@ test("home opens the interactive puzzle in-place and returns without navigation"
   await page.getByRole("button", { name: /Try the interactive puzzle/i }).click();
   const dialog = page.getByRole("dialog", { name: /Interactive puzzle/i });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByText("Crack the vault code")).toBeVisible();
+  await expect(dialog.getByText("Find the cabinet with the brass key")).toBeVisible();
   expect(page.url()).toBe(before);
 
   await page.getByRole("button", { name: "Close interactive puzzle" }).click();
@@ -142,21 +142,19 @@ test("home opens the interactive puzzle in-place and returns without navigation"
   expect(page.url()).toBe(before);
 });
 
-test("interactive vault keypad solves with the correct four-digit code", async ({ page }) => {
+test("interactive Seven Cabinets solves with Cabinet F", async ({ page }) => {
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
 
   await page.getByRole("button", { name: /Try the interactive puzzle/i }).click();
   const dialog = page.getByRole("dialog", { name: /Interactive puzzle/i });
 
-  for (const digit of ["5", "7", "2", "8"]) {
-    await dialog.getByRole("button", { name: digit, exact: true }).click();
-  }
-  await dialog.getByRole("button", { name: "TRY CODE" }).click();
+  await dialog.getByRole("button", { name: /F.*The key is not in B or D/i }).click();
+  await dialog.getByRole("button", { name: "OPEN CABINET F" }).click();
 
   await expect(dialog).toHaveCount(0, { timeout: 3000 });
   await expect(page.getByRole("heading", { name: /You solved today's riddle/i })).toBeVisible();
-  await expect(page.getByText("The Black Glass Vault")).toBeVisible();
+  await expect(page.getByText("The Seven Cabinets")).toBeVisible();
 });
 
 
@@ -270,7 +268,7 @@ test("archive entries open playable past riddles", async ({ page }) => {
 
 test("saved solve loads directly into the solved-today screen and can repeat", async ({ page }) => {
   await page.addInitScript(() => {
-    window.localStorage.setItem("daily-riddle-5", JSON.stringify({ solved: true, guesses: 4 }));
+    window.localStorage.setItem("daily-riddle-6", JSON.stringify({ solved: true, guesses: 4 }));
   });
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
@@ -299,7 +297,7 @@ test("saved solve loads directly into the solved-today screen and can repeat", a
 test("solved screen stays inside a narrow phone viewport", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.addInitScript(() => {
-    window.localStorage.setItem("daily-riddle-5", JSON.stringify({ solved: true, guesses: 2 }));
+    window.localStorage.setItem("daily-riddle-6", JSON.stringify({ solved: true, guesses: 2 }));
   });
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
@@ -311,7 +309,7 @@ test("solved screen stays inside a narrow phone viewport", async ({ page }) => {
 });
 
 
-test("temporary test riddle keeps the normal midnight countdown", async ({ page }) => {
+test("current daily riddle keeps the normal midnight countdown", async ({ page }) => {
   await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
 
