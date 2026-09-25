@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { playUiSound } from "../components/SoundToggle";
 
-type PuzzleType = "rope" | "coins" | "bridge" | "switches" | "lock";
+type PuzzleType = "rope" | "coins" | "bridge" | "switches" | "lock" | "cabinets";
 
 function saveSolved(riddleId: number) {
   const key = `daily-riddle-${riddleId}`;
@@ -834,7 +834,7 @@ function LockPuzzle({ riddleId }: { riddleId: number }) {
       const response = await fetch("/api/answer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answer: code }),
+        body: JSON.stringify({ answer: code, riddleId }),
       });
       const data = await response.json();
 
@@ -925,6 +925,116 @@ function LockPuzzle({ riddleId }: { riddleId: number }) {
   );
 }
 
+
+function CabinetsPuzzle({ riddleId }: { riddleId: number }) {
+  const plaques = [
+    { id: "A", text: "The key is in C or F." },
+    { id: "B", text: "The key is not in A or E." },
+    { id: "C", text: "The key is in B, D, or G." },
+    { id: "D", text: "The key is not in C or G." },
+    { id: "E", text: "The key is in A, D, or F." },
+    { id: "F", text: "The key is not in B or D." },
+    { id: "G", text: "The key is in E or G." },
+  ] as const;
+
+  const [selected, setSelected] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function submit() {
+    if (!selected || checking) return;
+    setChecking(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer: selected, riddleId }),
+      });
+      const data = await response.json();
+
+      if (data.correct) {
+        setMessage("Correct — Cabinet F is the only location that makes exactly five plaques true.");
+        saveSolved(riddleId);
+      } else {
+        setMessage(`Cabinet ${selected} does not make exactly five plaques true. Try another.`);
+      }
+    } catch {
+      setMessage("The cabinet could not be checked. Try again.");
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  return (
+    <div className="puzzle-shell">
+      <div className="puzzle-hud">
+        <div className="hud-stat">
+          <span className="hud-icon"><StatusIcon kind="moves" /></span>
+          <span><small>PLAQUES</small><strong>7</strong></span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-icon"><StatusIcon kind="target" /></span>
+          <span><small>TRUE</small><strong>EXACTLY 5</strong></span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-icon"><StatusIcon kind="time" /></span>
+          <span><small>KEYS</small><strong>1</strong></span>
+        </div>
+      </div>
+
+      <section className="game-stage cabinet-stage">
+        <div className="stage-head">
+          <div>
+            <span className="stage-label">SEALED GALLERY</span>
+            <h2>Find the cabinet with the brass key</h2>
+          </div>
+          <span className="live-pill active"><i /> {checking ? "CHECKING" : "7 LOCKED"}</span>
+        </div>
+
+        <div className="cabinet-rule">
+          Exactly five plaques tell the truth. Test the statements together, then choose one cabinet.
+        </div>
+
+        <div className="cabinet-grid" role="group" aria-label="Seven locked cabinets">
+          {plaques.map((plaque) => (
+            <button
+              key={plaque.id}
+              type="button"
+              className={`cabinet-card ${selected === plaque.id ? "selected" : ""}`}
+              onClick={() => {
+                setSelected(plaque.id);
+                setMessage("");
+              }}
+              aria-pressed={selected === plaque.id}
+            >
+              <span className="cabinet-letter">{plaque.id}</span>
+              <span className="cabinet-door-ui"><i /></span>
+              <small>{plaque.text}</small>
+            </button>
+          ))}
+        </div>
+
+        <div className="cabinet-controls">
+          <button className="control-button danger-lite" type="button" onClick={() => { setSelected(null); setMessage(""); }} disabled={!selected || checking}>
+            RESET
+          </button>
+          <button className="action-button" type="button" onClick={submit} disabled={!selected || checking}>
+            {checking ? "CHECKING…" : selected ? `OPEN CABINET ${selected}` : "CHOOSE A CABINET"}
+          </button>
+        </div>
+
+        {message ? (
+          <div className={message.startsWith("Correct") ? "success-banner compact" : "error-banner"} role="status">
+            {message}
+          </div>
+        ) : null}
+      </section>
+    </div>
+  );
+}
+
 export default function PuzzleClient({ type, riddleId, testHiddenCoin, testSwitchControl, embedded = false }: { type: PuzzleType; riddleId: number; testHiddenCoin?: HiddenCoin; testSwitchControl?: 1|2|3; embedded?: boolean }) {
   function tactilePuzzlePress(event: React.PointerEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
@@ -941,6 +1051,7 @@ export default function PuzzleClient({ type, riddleId, testHiddenCoin, testSwitc
       {type === "bridge" ? <BridgePuzzle riddleId={riddleId} /> : null}
       {type === "switches" ? <SwitchesPuzzle riddleId={riddleId} testControl={testSwitchControl} /> : null}
       {type === "lock" ? <LockPuzzle riddleId={riddleId} /> : null}
+      {type === "cabinets" ? <CabinetsPuzzle riddleId={riddleId} /> : null}
       {!embedded ? <div className="puzzle-footer"><Link href="/">← Back to today&apos;s riddle</Link><span>Progress saves on this device.</span></div> : null}
     </div>
   );
