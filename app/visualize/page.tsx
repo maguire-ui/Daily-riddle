@@ -3,6 +3,9 @@ import PuzzleClient from "./PuzzleClient";
 import SecondaryHeader from "../components/SecondaryHeader";
 import { getLiveRiddle } from "../lib/riddles";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function VisualizePage() {
   const riddle = getLiveRiddle(new Date());
 
