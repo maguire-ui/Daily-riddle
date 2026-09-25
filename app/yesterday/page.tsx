@@ -38,11 +38,19 @@ export default function YesterdayPage() {
         <section className="solution-paper">
           <span className="paper-tape solution-tape" aria-hidden="true"/>
           <p className="solution-lead">{r.solution}</p>
-          <Link className="watch-solution-button" href="/yesterday/play">
-            <span className="watch-play-icon">▶</span>
-            <span><strong>Play solving animation</strong><small>Watch the puzzle solve itself step by step.</small></span>
-            <span className="watch-arrow">→</span>
-          </Link>
+          {r.visualizer === "lock" || r.visualizer === "cabinets" ? (
+            <Link className="watch-solution-button" href={`/riddle/${r.id}`}>
+              <span className="watch-play-icon">↻</span>
+              <span><strong>Replay interactive puzzle</strong><small>Try yesterday&apos;s challenge again.</small></span>
+              <span className="watch-arrow">→</span>
+            </Link>
+          ) : (
+            <Link className="watch-solution-button" href="/yesterday/play">
+              <span className="watch-play-icon">▶</span>
+              <span><strong>Play solving animation</strong><small>Watch the puzzle solve itself step by step.</small></span>
+              <span className="watch-arrow">→</span>
+            </Link>
+          )}
           <div className="solution-rule"><span>STEP BY STEP</span></div>
           <div className="solution-steps">
             {r.steps.map((step,index)=>(
