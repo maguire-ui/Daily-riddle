@@ -1682,3 +1682,61 @@ textarea,input,select{-webkit-user-select:text;user-select:text;-webkit-touch-ca
     font-size:14px;
   }
 }
+
+
+/* Riddle #006 — Seven Cabinets */
+.riddle-6{--accent:#e0aa54;--accent-2:#6bc9bd;--accent-3:#ff7b68}
+
+.cabinet-wall{fill:#e8ddcb;stroke:#202735;stroke-width:2}
+.cabinet-floor{fill:none;stroke:#8e7e68;stroke-width:3;stroke-linecap:round}
+.cabinet-door{fill:#6f5945;stroke:#202735;stroke-width:2}
+.cabinet-knob{fill:#e8bd60;stroke:#202735;stroke-width:1.5}
+.cabinet-plaque-line{fill:none;stroke:#d7c7a9;stroke-width:3;stroke-linecap:round}
+.cabinet-light{fill:#f5d98f;opacity:.75}
+
+.cabinet-stage{display:grid;gap:18px}
+.cabinet-rule{
+  padding:12px 14px;border:1px dashed var(--line-2);border-radius:14px;
+  background:#fff8ed;color:var(--ink-2);font-size:12px;font-weight:750;line-height:1.45
+}
+.cabinet-grid{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px
+}
+.cabinet-card{
+  min-width:0;min-height:170px;padding:10px 9px 12px;display:grid;grid-template-rows:auto 76px 1fr;
+  gap:8px;align-items:start;border:1.5px solid #8c7a65;border-radius:15px;background:#fffaf2;
+  color:var(--ink);box-shadow:0 4px 0 #cdbda6;transition:transform .2s var(--spring),box-shadow .2s,border-color .2s,background .2s
+}
+.cabinet-card:hover:not(:disabled){background:#fff3de;transform:translateY(-2px)}
+.cabinet-card.selected{
+  border-color:var(--teal-dark);background:#eefaf7;box-shadow:0 4px 0 #7ebdb3,0 0 0 3px rgba(38,174,158,.12)
+}
+.cabinet-letter{
+  width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fff;
+  font-family:var(--font-heading);font-weight:900;font-size:14px
+}
+.cabinet-door-ui{
+  position:relative;width:54px;height:72px;margin:0 auto;border:2px solid #3b3027;border-radius:8px;
+  background:linear-gradient(90deg,#755c45,#8b6c50 48%,#674f3d)
+}
+.cabinet-door-ui::before{
+  content:"";position:absolute;left:8px;right:8px;top:10px;height:18px;border:1px solid rgba(255,255,255,.22);border-radius:4px
+}
+.cabinet-door-ui i{
+  position:absolute;right:8px;top:38px;width:6px;height:6px;border-radius:50%;background:#e4b958;border:1px solid #3b3027
+}
+.cabinet-card small{
+  display:block;min-width:0;color:var(--ink-2);font-size:9px;line-height:1.42;text-align:left;overflow-wrap:anywhere
+}
+.cabinet-controls{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}
+.cabinet-controls .action-button{min-width:0;white-space:normal;line-height:1.2;padding:0 14px}
+
+@media(max-width:650px){
+  .cabinet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:370px){
+  .cabinet-grid{grid-template-columns:1fr}
+  .cabinet-card{min-height:142px;grid-template-columns:auto 64px minmax(0,1fr);grid-template-rows:auto;align-items:center}
+  .cabinet-card small{font-size:10px}
+  .cabinet-controls{grid-template-columns:1fr}
+}
