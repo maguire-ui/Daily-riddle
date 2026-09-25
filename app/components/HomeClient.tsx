@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import PuzzleClient from "../visualize/PuzzleClient";
 import SoundToggle, { playUiSound } from "./SoundToggle";
 
@@ -11,7 +12,7 @@ type PublicRiddle = {
   category: string;
   difficulty: string;
   question: string;
-  visualizer: "rope" | "coins" | "bridge" | "switches" | "lock";
+  visualizer: "rope" | "coins" | "bridge" | "switches" | "lock" | "cabinets";
 };
 
 function ArrowIcon() {
@@ -128,6 +129,24 @@ function PuzzleIllustration({ id }: { id: number }) {
     );
   }
 
+  if (id === 6) {
+    const cabinets = [34, 84, 134, 184, 234, 284, 334];
+    return (
+      <svg className="puzzle-illustration simple-scene-illustration cabinet-illustration" viewBox="0 0 420 240" role="img" aria-label="Seven locked cabinets in a dim gallery">
+        <rect className="cabinet-wall" x="18" y="28" width="384" height="184" rx="28"/>
+        <path className="cabinet-floor" d="M29 190h362"/>
+        {cabinets.map((x,index)=>(
+          <g key={x} transform={`translate(${x} 0)`}>
+            <rect className="cabinet-door" x="0" y={index % 2 === 0 ? 66 : 72} width="38" height="108" rx="7"/>
+            <circle className="cabinet-knob" cx="29" cy={index % 2 === 0 ? 121 : 127} r="3.5"/>
+            <path className="cabinet-plaque-line" d={`M7 ${index % 2 === 0 ? 86 : 92}h24`}/>
+          </g>
+        ))}
+        <path className="cabinet-light" d="M207 36 178 63h58z"/>
+      </svg>
+    );
+  }
+
   return (
     <svg className="puzzle-illustration" viewBox="0 0 420 240" aria-hidden="true">
       <path className="ink-line" d="M139 82c12-31 39-47 72-47 43 0 75 27 75 65 0 31-18 46-42 61-19 12-23 18-23 37"/>
@@ -198,6 +217,8 @@ function SolvedToday({ riddle, remaining, guessCount, onRepeat }: { riddle: Publ
 }
 
 export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle; unlockAt: string }) {
+  const router = useRouter();
+  const rolloverHandled = useRef(false);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<null | boolean>(null);
   const [guessCount, setGuessCount] = useState(0);
@@ -205,30 +226,47 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
   const [remaining, setRemaining] = useState("");
   const [puzzleOpen, setPuzzleOpen] = useState(false);
   const [repeating, setRepeating] = useState(false);
+  const [loadedStorageKey, setLoadedStorageKey] = useState<string | null>(null);
 
   const storageKey = useMemo(() => `daily-riddle-${riddle.id}`, [riddle.id]);
 
   useEffect(() => {
+    setRepeating(false);
+    setResult(null);
+    setAnswer("");
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
       setGuessCount(Number(saved.guesses || 0));
       setSolved(Boolean(saved.solved));
-    } catch {}
+    } catch {
+      setGuessCount(0);
+      setSolved(false);
+    } finally {
+      setLoadedStorageKey(storageKey);
+    }
   }, [storageKey]);
 
   useEffect(() => {
+    rolloverHandled.current = false;
+
     const tick = () => {
-      const ms = Math.max(0, new Date(unlockAt).getTime() - Date.now());
+      const rawMs = new Date(unlockAt).getTime() - Date.now();
+      const ms = Math.max(0, rawMs);
       const h = Math.floor(ms / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
       const s = Math.floor((ms % 60000) / 1000);
       setRemaining(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
-      if (ms === 0) window.location.reload();
+
+      if (rawMs <= 0 && !rolloverHandled.current) {
+        rolloverHandled.current = true;
+        router.refresh();
+      }
     };
+
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [unlockAt]);
+  }, [router, unlockAt]);
 
   useEffect(() => {
     const onSolved = (event: Event) => {
@@ -286,7 +324,7 @@ export default function HomeClient({ riddle, unlockAt }: { riddle: PublicRiddle;
     if (target.closest("button, a, [role='button']")) playUiSound("tap");
   }
 
-  if (solved && !repeating) {
+  if (loadedStorageKey === storageKey && solved && !repeating) {
     return (
       <SolvedToday
         riddle={riddle}
